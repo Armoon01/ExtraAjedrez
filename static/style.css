@@ -52,3 +52,12 @@ body {
         left: 50%;
         transform: translate(-50%, -50%); /* Ajusta el desplazamiento al centro */
     }
+    @keyframes blink {
+        0% { background-color: red; }
+        50% { background-color: transparent; }
+        100% { background-color: red; }
+    }
+    
+    .cell.blink {
+        animation: blink 0.5s ease-in-out infinite;
+    }
