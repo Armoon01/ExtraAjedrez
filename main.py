@@ -39,9 +39,10 @@ def move_piece():
     data = request.get_json()
     from_pos = tuple(data['from'])
     to_pos = tuple(data['to'])
+    promotion_choice = data.get('promotion_choice')  # Obtener la elección de promoción (si existe)
 
     # Llamar a la función move_piece y obtener la respuesta
-    result = game.move_piece(from_pos, to_pos)
+    result = game.move_piece(from_pos, to_pos, promotion_choice)
 
     # Verificar si el rey sigue en jaque después del movimiento
     if game.is_in_check(game.current_turn):
@@ -51,10 +52,11 @@ def move_piece():
         result["in_check"] = False
 
     # Verificar si el movimiento no cubre el jaque
-    if result["in_check"]:
-        result["move_does_not_cover_check"] = True
-    else:
-        result["move_does_not_cover_check"] = False
+    result["move_does_not_cover_check"] = result["in_check"]
+
+    # Asegurarse de incluir el campo "promotion_required" si está presente
+    if "promotion_required" not in result:
+        result["promotion_required"] = False
 
     # Retornar la respuesta completa de move_piece
     return jsonify(result)

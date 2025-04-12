@@ -1,42 +1,44 @@
-from app.pieces.piece import Piece
-
-class Pawn(Piece):
+# filepath: c:\Users\lunai\OneDrive\Escritorio\Chess.com-1\app\pieces\pawn.py
+class Pawn:
     def __init__(self, color):
-        super().__init__(color)
-        self.name = "P" if color == "white" else "p"
+        self.color = color
+        self.name = "P"
 
-    def get_legal_moves(self, position, board, last_move=None):
-        x, y = position
-        direction = -1 if self.color == "white" else 1
+    def get_legal_moves(self, pos, board, last_move):
+        x, y = pos
         moves = []
 
-        # Movimiento hacia adelante (una casilla)
-        if self.is_empty((x + direction, y), board):
-            moves.append((x + direction, y))
+        # Movimiento hacia adelante
+        if self.color == "white":
+            if x > 0 and board[x - 1][y] is None:
+                moves.append((x - 1, y))
+                if x == 6 and board[x - 2][y] is None:
+                    moves.append((x - 2, y))
+        else:  # Black
+            if x < 7 and board[x + 1][y] is None:
+                moves.append((x + 1, y))
+                if x == 1 and board[x + 2][y] is None:
+                    moves.append((x + 2, y))
 
-            # Doble paso desde fila inicial
-            start_row = 6 if self.color == "white" else 1
-            if x == start_row and self.is_empty((x + 2 * direction, y), board):
-                moves.append((x + 2 * direction, y))
+        # Capturas diagonales
+        if self.color == "white":
+            if x > 0 and y > 0 and board[x - 1][y - 1] and board[x - 1][y - 1].color == "black":
+                moves.append((x - 1, y - 1))
+            if x > 0 and y < 7 and board[x - 1][y + 1] and board[x - 1][y + 1].color == "black":
+                moves.append((x - 1, y + 1))
+        else:  # Black
+            if x < 7 and y > 0 and board[x + 1][y - 1] and board[x + 1][y - 1].color == "white":
+                moves.append((x + 1, y - 1))
+            if x < 7 and y < 7 and board[x + 1][y + 1] and board[x + 1][y + 1].color == "white":
+                moves.append((x + 1, y + 1))
 
-        # Capturas en diagonal
-        for dy in [-1, 1]:
-            nx, ny = x + direction, y + dy
-            if self.in_bounds(nx, ny):
-                target = board[nx][ny]
-                if target is not None and target.color != self.color:
-                    moves.append((nx, ny))
-
-                # Captura al paso
-                if last_move and last_move["piece"] == "P" and abs(last_move["from"][0] - last_move["to"][0]) == 2:
-                    if last_move["to"] == (x, y + dy):
-                        moves.append((nx, ny))
+        # Captura al paso
+        if last_move:
+            last_from, last_to, last_piece = last_move
+            if isinstance(last_piece, Pawn) and abs(last_from[0] - last_to[0]) == 2:
+                if self.color == "white" and x == 3 and abs(y - last_to[1]) == 1:
+                    moves.append((2, last_to[1]))
+                elif self.color == "black" and x == 4 and abs(y - last_to[1]) == 1:
+                    moves.append((5, last_to[1]))
 
         return moves
-
-    def is_empty(self, pos, board):
-        x, y = pos
-        return self.in_bounds(x, y) and board[x][y] is None
-
-    def in_bounds(self, x, y):
-        return 0 <= x < 8 and 0 <= y < 8

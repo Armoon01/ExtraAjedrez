@@ -1,27 +1,22 @@
-from app.pieces.piece import Piece
-
-class Knight(Piece):
+class Knight:
     def __init__(self, color):
-        super().__init__(color)
-        self.name = "N" if color == "white" else "n"
-        self.type = "n"
+        self.color = color
+        self.name = "N"
 
-    def get_legal_moves(self, position, board, last_move=None):
-        x, y = position
-        directions = [
-            (2, 1), (2, -1), (-2, 1), (-2, -1),
-            (1, 2), (1, -2), (-1, 2), (-1, -2)
-        ]
+    def get_legal_moves(self, pos, board, last_move):
+        x, y = pos
         moves = []
 
-        for dx, dy in directions:
-            nx, ny = x + dx, y + dy
-            if self.in_bounds(nx, ny):
-                target = board[nx][ny]
+        # Movimientos del caballo
+        knight_moves = [
+            (x + 2, y + 1), (x + 2, y - 1), (x - 2, y + 1), (x - 2, y - 1),
+            (x + 1, y + 2), (x + 1, y - 2), (x - 1, y + 2), (x - 1, y - 2)
+        ]
+
+        for move in knight_moves:
+            if 0 <= move[0] < 8 and 0 <= move[1] < 8:
+                target = board[move[0]][move[1]]
                 if target is None or target.color != self.color:
-                    moves.append((nx, ny))
+                    moves.append(move)
 
         return moves
-
-    def in_bounds(self, x, y):
-        return 0 <= x < 8 and 0 <= y < 8

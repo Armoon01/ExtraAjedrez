@@ -52,12 +52,73 @@ body {
         left: 50%;
         transform: translate(-50%, -50%); /* Ajusta el desplazamiento al centro */
     }
+    .cell.blink {
+        animation: blink 0.5s ease-in-out infinite;
+    }
+    
     @keyframes blink {
         0% { background-color: red; }
         50% { background-color: transparent; }
         100% { background-color: red; }
     }
+    .modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+    }
     
-    .cell.blink {
-        animation: blink 0.5s ease-in-out infinite;
+    .modal.hidden {
+        display: none;
+    }
+    
+    .modal-content {
+        background-color: white;
+        padding: 20px;
+        border-radius: 8px;
+        text-align: center;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+    
+    .promotion-options {
+        display: flex;
+        justify-content: space-around;
+        margin: 20px 0;
+    }
+    
+    .promotion-option {
+        cursor: pointer;
+        padding: 10px;
+        border: 2px solid transparent;
+        border-radius: 8px;
+        transition: border-color 0.3s;
+    }
+    
+    .promotion-option:hover {
+        border-color: #007bff;
+    }
+    
+    .promotion-option img {
+        width: 50px;
+        height: 50px;
+    }
+    
+    #close-promotion-menu {
+        background-color: #f44336;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: background-color 0.3s;
+    }
+    
+    #close-promotion-menu:hover {
+        background-color: #d32f2f;
     }

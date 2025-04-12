@@ -3,12 +3,35 @@
 <head>
   <meta charset="UTF-8">
   <title>Chess App</title>
-  <link rel="stylesheet" href="/static/style.css">
+  <link rel="stylesheet" href="/static/style.css?v=1.0">
 </head>
 <body>
   <h1>Chess.com clone</h1>
   <div id="board" class="board"></div>
   <h2 id="turn">Turno: white</h2>
+
+  <!-- Modal para elegir la pieza de promoción -->
+  <div id="promotion-menu" class="modal hidden">
+    <div class="modal-content">
+        <h3>Elige una pieza para la promoción</h3>
+        <div class="promotion-options">
+            <div class="promotion-option" data-piece="queen">
+                <img src="/static/images/wq.png" alt="Reina">
+            </div>
+            <div class="promotion-option" data-piece="rook">
+                <img src="/static/images/wr.png" alt="Torre">
+            </div>
+            <div class="promotion-option" data-piece="bishop">
+                <img src="/static/images/wb.png" alt="Alfil">
+            </div>
+            <div class="promotion-option" data-piece="knight">
+                <img src="/static/images/wn.png" alt="Caballo">
+            </div>
+        </div>
+        <button id="close-promotion-menu">Cancelar</button>
+    </div>
+</div>
+
   <script src="/static/script.js"></script>
 </body>
 </html>
