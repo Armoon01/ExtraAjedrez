@@ -57,7 +57,7 @@ _(Próximamente screenshots de avance)_
 
 ## ✨ Autor
 
-Desarrollado por [Tu Nombre o Usuario](https://github.com/Armoon01)  
+Desarrollado por Armoon01 (https://github.com/Armoon01)  
 Proyecto con fines educativos y de práctica.
 
 
