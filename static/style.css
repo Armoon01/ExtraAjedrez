@@ -1,0 +1,54 @@
+body {
+    font-family: Arial, sans-serif;
+    text-align: center;
+  }
+  
+    .board {
+        display: grid;
+        grid-template-columns: repeat(8, 60px);
+        grid-template-rows: repeat(8, 60px);
+        width: fit-content;
+        margin: auto;
+        border: 2px solid black;
+    }
+    
+    .cell {
+        width: 60px;
+        height: 60px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 32px;
+        cursor: pointer;
+        position: relative; /* Necesario para centrar el pseudo-elemento */
+    }
+    
+    .white {
+        background-color: #f0d9b5;
+    }
+    
+    .black {
+        background-color: #b58863;
+    }
+    .piece-img {
+        width: 48px;
+        height: 48px;
+        pointer-events: none; /* para que no bloqueen los clics */
+    }
+  /* Casilla seleccionada */
+    .selected-cell {
+        background-color: rgba(255, 255, 0, 0.4); /* amarillo suave */
+    }
+
+    /* Casilla con movimiento legal */
+    .legal-move::before {
+        content: '';
+        width: 16px;
+        height: 16px;
+        background-color: rgba(0, 0, 0, 0.3);
+        border-radius: 50%;
+        position: absolute; /* Para centrar dentro de la celda */
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%); /* Ajusta el desplazamiento al centro */
+    }
