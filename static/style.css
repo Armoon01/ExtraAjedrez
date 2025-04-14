@@ -1,124 +1,227 @@
 body {
     font-family: Arial, sans-serif;
     text-align: center;
-  }
-  
-    .board {
-        display: grid;
-        grid-template-columns: repeat(8, 60px);
-        grid-template-rows: repeat(8, 60px);
-        width: fit-content;
-        margin: auto;
-        border: 2px solid black;
-    }
-    
-    .cell {
-        width: 60px;
-        height: 60px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 32px;
-        cursor: pointer;
-        position: relative; /* Necesario para centrar el pseudo-elemento */
-    }
-    
-    .white {
-        background-color: #f0d9b5;
-    }
-    
-    .black {
-        background-color: #b58863;
-    }
-    .piece-img {
-        width: 48px;
-        height: 48px;
-        pointer-events: none; /* para que no bloqueen los clics */
-    }
-  /* Casilla seleccionada */
-    .selected-cell {
-        background-color: rgba(255, 255, 0, 0.4); /* amarillo suave */
-    }
+}
 
-    /* Casilla con movimiento legal */
-    .legal-move::before {
-        content: '';
-        width: 16px;
-        height: 16px;
-        background-color: rgba(0, 0, 0, 0.3);
-        border-radius: 50%;
-        position: absolute; /* Para centrar dentro de la celda */
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%); /* Ajusta el desplazamiento al centro */
-    }
-    .cell.blink {
-        animation: blink 0.5s ease-in-out infinite;
-    }
-    
-    @keyframes blink {
-        0% { background-color: red; }
-        50% { background-color: transparent; }
-        100% { background-color: red; }
-    }
-    .modal {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background-color: rgba(0, 0, 0, 0.5);
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        z-index: 1000;
-    }
-    
-    .modal.hidden {
-        display: none;
-    }
-    
-    .modal-content {
-        background-color: white;
-        padding: 20px;
-        border-radius: 8px;
-        text-align: center;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    }
-    
-    .promotion-options {
-        display: flex;
-        justify-content: space-around;
-        margin: 20px 0;
-    }
-    
-    .promotion-option {
-        cursor: pointer;
-        padding: 10px;
-        border: 2px solid transparent;
-        border-radius: 8px;
-        transition: border-color 0.3s;
-    }
-    
-    .promotion-option:hover {
-        border-color: #007bff;
-    }
-    
-    .promotion-option img {
-        width: 50px;
-        height: 50px;
-    }
-    
-    #close-promotion-menu {
-        background-color: #f44336;
-        color: white;
-        border: none;
-        padding: 10px 20px;
-        border-radius: 8px;
-        cursor: pointer;
-        transition: background-color 0.3s;
-    }
-    
-    #close-promotion-menu:hover {
-        background-color: #d32f2f;
-    }
+.board {
+    display: grid;
+    grid-template-columns: repeat(8, 60px);
+    grid-template-rows: repeat(8, 60px);
+    width: fit-content;
+    margin: auto;
+}
+
+.cell {
+    width: 60px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 32px;
+    cursor: pointer;
+    position: relative; /* Necesario para centrar el pseudo-elemento */
+}
+
+.white {
+    background-color: #f0d9b5;
+}
+
+.black {
+    background-color: #b58863;
+}
+
+.piece-img {
+    width: 48px;
+    height: 48px;
+    pointer-events: none; /* para que no bloqueen los clics */
+}
+
+/* Casilla seleccionada */
+.selected-cell {
+    background-color: rgba(255, 255, 0, 0.4); /* amarillo suave */
+}
+
+/* Casilla con movimiento legal */
+.legal-move::before {
+    content: '';
+    width: 16px;
+    height: 16px;
+    background-color: rgba(0, 0, 0, 0.3);
+    border-radius: 50%;
+    position: absolute; /* Para centrar dentro de la celda */
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%); /* Ajusta el desplazamiento al centro */
+}
+
+.cell.blink {
+    animation: blink 0.5s ease-in-out infinite;
+}
+
+@keyframes blink {
+    0% { background-color: red; }
+    50% { background-color: transparent; }
+    100% { background-color: red; }
+}
+
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal.hidden {
+    display: none;
+}
+
+.modal-content {
+    background-color: white;
+    padding: 20px;
+    border-radius: 8px;
+    text-align: center;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.promotion-options {
+    display: flex; /* Mostrar las opciones en una fila */
+    justify-content: center; /* Centrar las opciones de piezas */
+    margin: 20px 0;
+    padding: 0; /* Eliminar cualquier padding */
+    border: none; /* Eliminar bordes si los hay */
+    background-color: transparent; /* Sin color de fondo adicional */
+}
+
+.promotion-option {
+    cursor: pointer;
+    padding: 10px;
+    border: 2px solid transparent;
+    transition: border-color 0.3s;
+    display: inline-block; /* Alinea las opciones en fila */
+    background-color: #f0d9b5; /* Color base de casilla blanca */
+}
+
+/* Intercalar los colores de las opciones de promoción */
+.promotion-option:nth-child(even) {
+    background-color: #b58863; /* Color base de casilla negra */
+}
+
+.promotion-option:nth-child(odd) {
+    background-color: #f0d9b5; /* Color base de casilla blanca */
+}
+
+.promotion-option:hover {
+    border-color: #007bff;
+}
+
+.promotion-option img {
+    width: 50px;
+    height: 50px;
+    object-fit: contain; /* Asegura que las imágenes no se deformen */
+}
+.promotion-option img:hover {
+    transform: scale(1.5); /* Aumenta el tamaño al 120% */
+    transition: transform 0.3s ease-in-out; /* Suaviza la animación */
+}
+
+#close-promotion-menu {
+    background-color: #f44336;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+#close-promotion-menu:hover {
+    background-color: #d32f2f;
+}
+
+#game-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+}
+
+#game-container {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start; /* alineado a la izquierda */
+    margin: 0 auto;
+    width: fit-content;
+}
+
+.black-info,
+.white-info {
+    position: absolute;
+    left: 0; /* Alineado con el borde izquierdo del tablero */
+    width: fit-content; /* Ajusta el ancho al contenido */
+}
+
+.black-info {
+    top: -70px; /* Ajusta la distancia desde el tablero */
+}
+
+.white-info {
+    bottom: -70px; /* Ajusta la distancia desde el tablero */
+}
+
+.board {
+    display: grid;
+    grid-template-columns: repeat(8, 60px);
+    grid-template-rows: repeat(8, 60px);
+    width: fit-content;
+    margin: auto;
+    position: relative; /* Necesario para posicionar los elementos absolutos */
+}
+
+.player {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 3px;
+    justify-content: center;
+}
+
+.player.black {
+    border-top-left-radius: 5px;
+    border-top-right-radius: 5px;
+}
+
+.player.white {
+    border-bottom-left-radius: 5px;
+    border-bottom-right-radius: 5px;
+}
+
+.player-img {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    border: 2px solid #ccc;
+}
+
+.timer {
+    font-size: 18px;
+    font-weight: bold;
+    color: #fff;
+    background-color: #333;
+    padding: 5px 10px;
+    border-radius: 5px;
+}
+.hidden {
+    display: none;
+}
+
+.white-clock,
+.black-clock {
+    display: inline-block;
+    margin-left: 10px;
+}

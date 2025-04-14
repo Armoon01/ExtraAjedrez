@@ -6,31 +6,61 @@
   <link rel="stylesheet" href="/static/style.css?v=1.0">
 </head>
 <body>
-  <h1>Chess.com clone</h1>
-  <div id="board" class="board"></div>
-  <h2 id="turn">Turno: white</h2>
-
-  <!-- Modal para elegir la pieza de promoción -->
-  <div id="promotion-menu" class="modal hidden">
-    <div class="modal-content">
-        <h3>Elige una pieza para la promoción</h3>
-        <div class="promotion-options">
-            <div class="promotion-option" data-piece="queen">
-                <img src="/static/images/wq.png" alt="Reina">
+    <h1>Chess.com clone</h1>
+    <div id="game-container">
+        <div class="player black">
+            <img src="/static/images/black_player.png" alt="Black Player" class="player-img">
+            <span>Black</span>
+            <div class="black-clock">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="30" height="30">
+                    <circle cx="50" cy="50" r="45" stroke="black" stroke-width="6" fill="none" />
+                    <circle cx="50" cy="50" r="3" fill="black" />
+                    
+                    <!-- Hour Hand -->
+                    <line id="black-clock-hand" x1="50" y1="50" x2="50" y2="15" stroke="black" stroke-width="8" />
+                  </svg>                  
             </div>
-            <div class="promotion-option" data-piece="rook">
-                <img src="/static/images/wr.png" alt="Torre">
-            </div>
-            <div class="promotion-option" data-piece="bishop">
-                <img src="/static/images/wb.png" alt="Alfil">
-            </div>
-            <div class="promotion-option" data-piece="knight">
-                <img src="/static/images/wn.png" alt="Caballo">
-            </div>
+            <div class="timer black-timer">10:00</div>
         </div>
-        <button id="close-promotion-menu">Cancelar</button>
+        <div id="board" class="board"></div>
+        <div class="player white">
+            <img src="/static/images/white_player.png" alt="White Player" class="player-img">
+            <span>White</span>
+            <div class="white-clock hidden">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="30" height="30">
+                    <circle cx="50" cy="50" r="45" stroke="black" stroke-width="6" fill="none" />
+                    <circle cx="50" cy="50" r="3" fill="black" />
+                    
+                    <!-- Hour Hand -->
+                    <line id="white-clock-hand" x1="50" y1="50" x2="50" y2="15" stroke="black" stroke-width="8" />
+                  </svg>  
+            </div>
+            <div class="timer white-timer">10:00</div>
+        </div>
     </div>
-</div>
+    <h2 id="turn">Turno: white</h2>
+
+    <!-- Modal para elegir la pieza de promoción -->
+    <div id="promotion-menu" class="modal hidden">
+        <div class="modal-content">
+            <h3>Elige una pieza para la promoción</h3>
+            <div class="promotion-options">
+                <div class="promotion-option" data-piece="queen">
+                    <img src="/static/images/wq.png" alt="White Queen">
+                </div>
+                <div class="promotion-option" data-piece="rook">
+                    <img src="/static/images/wr.png" alt="White Rook">
+                </div>
+                <div class="promotion-option" data-piece="bishop">
+                    <img src="/static/images/wb.png" alt="White Bishop">
+                </div>
+                <div class="promotion-option" data-piece="knight">
+                    <img src="/static/images/wn.png" alt="White Knight">
+                </div>
+            </div>
+            <button id="close-promotion-menu">Cerrar</button>
+        </div>
+    </div>
 
   <script src="/static/script.js"></script>
 </body>
