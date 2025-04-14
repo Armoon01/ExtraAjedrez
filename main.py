@@ -63,6 +63,7 @@ def move_piece():
     in_check = game.is_in_check(game.current_turn)
     king_pos = game.get_king_position(game.current_turn)
 
+    # Agregar información adicional al resultado
     result["in_check"] = in_check
     result["king_position"] = king_pos
     result["move_does_not_cover_check"] = not move_covers_check
@@ -77,6 +78,14 @@ def move_piece():
 
     # Estado del tablero
     result["board"] = game.get_board_state()
+
+    # Verificar si se capturó una pieza
+    captured_piece = result.get("captured_piece", None)
+    if captured_piece:
+        result["captured_piece"] = {
+            "type": captured_piece.name.lower(),
+            "color": captured_piece.color
+        }
 
     # Verificar si el juego ha terminado
     if game.is_game_over():

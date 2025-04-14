@@ -92,7 +92,6 @@ async function handleDrop(e, x, y) {
     const to = [x, y];
 
     await attemptMove(from, to);
-    selected = null;
 }
 
 async function handleClick(x, y) {
@@ -119,31 +118,18 @@ async function handleClick(x, y) {
         }
 
         await attemptMove(selected, [x, y]);
-        selected = null;
     }
 }
 function showPromotionMenu(result, from, to) {
-    const menu = document.getElementById("promotion-menu");
-    menu.classList.remove("hidden");
+    const modal = document.getElementById("promotion-menu");
+    modal.classList.remove("hidden");
 
-    const pieceColor = result.promotion_piece_color;
-    if (!pieceColor) {
-        console.error("No se encontró el color de la pieza para la promoción.");
-        return;
-    }
+    const buttons = document.querySelectorAll(".promotion-option");
+    buttons.forEach(button => {
+        button.onclick = async () => {
+            const promotionChoice = button.dataset.piece;
 
-    const promotionOptions = document.querySelectorAll(".promotion-option img");
-    const pieceTypes = ["queen", "rook", "bishop", "knight"];
-    promotionOptions.forEach((img, index) => {
-        const pieceType = pieceTypes[index];
-        img.src = `/static/images/${pieceColor[0]}${pieceType[0]}.png`;
-        img.alt = `${pieceColor} ${pieceType}`;
-    });
-
-    document.querySelectorAll(".promotion-option").forEach((option, index) => {
-        option.onclick = async () => {
-            const promotionChoice = pieceTypes[index];
-
+            // Enviar la promoción al backend
             const promotionRes = await fetch('/promote', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -156,15 +142,15 @@ function showPromotionMenu(result, from, to) {
                 alert(promotionResult.error || "Error al promover la pieza.");
             } else {
                 currentTurn = promotionResult.turn;
-                await loadBoard();
+                await loadBoard(); // Recargar el tablero después de la promoción
             }
 
-            menu.classList.add("hidden");
+            modal.classList.add("hidden");
         };
     });
 
     document.getElementById("close-promotion-menu").onclick = () => {
-        menu.classList.add("hidden");
+        modal.classList.add("hidden");
     };
 }
 async function attemptMove(from, to) {
@@ -192,7 +178,6 @@ async function attemptMove(from, to) {
 
         // Reproducir sonido de movimiento ilegal
         playSound('illegal.mp3');
-        selected = null;
         return;
     }
 
@@ -216,7 +201,6 @@ async function attemptMove(from, to) {
 
     currentTurn = result.turn;
     switchTimer();
-    selected = null;
 }
 async function showLegalMoves(row, col) {
     const response = await fetch("/legal_moves", {
