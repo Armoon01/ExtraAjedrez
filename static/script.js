@@ -145,8 +145,22 @@ async function attemptMove(from, to) {
             clearHighlights();
             await showLegalMoves(from[0], from[1]);
         }
+
+        // Reproducir sonido de movimiento ilegal
+        playSound('illegal.mp3');
         selected = null;
         return;
+    }
+
+    // Reproducir sonido según el tipo de movimiento
+    if (result.castling) {
+        playSound('castle.mp3'); // Sonido de enroque
+    } else if (result.captured_piece) {
+        playSound('capture.mp3'); // Sonido de captura
+    } else if (result.promotion_required) {
+        playSound('promote.mp3'); // Sonido de promoción
+    } else {
+        playSound('move-self.mp3'); // Sonido de movimiento normal
     }
 
     await loadBoard();
@@ -160,7 +174,6 @@ async function attemptMove(from, to) {
     switchTimer();
     selected = null;
 }
-
 async function showLegalMoves(row, col) {
     const response = await fetch("/legal_moves", {
         method: "POST",
@@ -243,7 +256,10 @@ function switchTimer() {
     document.querySelector(".white-clock").classList.toggle("hidden", currentTimer !== "white");
     document.querySelector(".black-clock").classList.toggle("hidden", currentTimer !== "black");
 }
-
+function playSound(sound) {
+    const audio = new Audio(`/static/sounds/${sound}`);
+    audio.play();
+}
 window.onload = () => {
     loadBoard();
     startTimer();
