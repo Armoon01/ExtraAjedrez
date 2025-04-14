@@ -9,6 +9,8 @@ body {
     grid-template-rows: repeat(8, 60px);
     width: fit-content;
     margin: auto;
+    position: relative;
+    user-select: none;
 }
 
 .cell {
@@ -19,7 +21,8 @@ body {
     justify-content: center;
     font-size: 32px;
     cursor: pointer;
-    position: relative; /* Necesario para centrar el pseudo-elemento */
+    z-index: 1;
+    position: relative;
 }
 
 .white {
@@ -31,14 +34,31 @@ body {
 }
 
 .piece-img {
+    background-size: 100%;
     width: 48px;
     height: 48px;
-    pointer-events: none; /* para que no bloqueen los clics */
+    z-index: 2;
+    overflow: hidden;
+    position: absolute;
+    position: relative;
+    cursor: pointer;
+    cursor: grab;
+    cursor: -webkit-grab;
+    touch-action: none;
+    will-change: transform;
+    user-select: none;
+    
+}
+.piece.dragging {
+    cursor: grabbing !important;
+    cursor: -webkit-grabbing;
+    z-index: 2; /* Asegúrate de que la pieza esté por encima de otros elementos */
+    opacity: 1; /* Asegura que no se transparente */
 }
 
 /* Casilla seleccionada */
 .selected-cell {
-    background-color: rgba(255, 255, 0, 0.4); /* amarillo suave */
+    background-color: rgba(255, 255, 0, 0.4);
 }
 
 /* Casilla con movimiento legal */
@@ -48,10 +68,10 @@ body {
     height: 16px;
     background-color: rgba(0, 0, 0, 0.3);
     border-radius: 50%;
-    position: absolute; /* Para centrar dentro de la celda */
+    position: absolute;
     top: 50%;
     left: 50%;
-    transform: translate(-50%, -50%); /* Ajusta el desplazamiento al centro */
+    transform: translate(-50%, -50%);
 }
 
 .cell.blink {
@@ -90,12 +110,12 @@ body {
 }
 
 .promotion-options {
-    display: flex; /* Mostrar las opciones en una fila */
-    justify-content: center; /* Centrar las opciones de piezas */
+    display: flex;
+    justify-content: center;
     margin: 20px 0;
-    padding: 0; /* Eliminar cualquier padding */
-    border: none; /* Eliminar bordes si los hay */
-    background-color: transparent; /* Sin color de fondo adicional */
+    padding: 0;
+    border: none;
+    background-color: transparent;
 }
 
 .promotion-option {
@@ -103,17 +123,12 @@ body {
     padding: 10px;
     border: 2px solid transparent;
     transition: border-color 0.3s;
-    display: inline-block; /* Alinea las opciones en fila */
-    background-color: #f0d9b5; /* Color base de casilla blanca */
+    display: inline-block;
+    background-color: #f0d9b5;
 }
 
-/* Intercalar los colores de las opciones de promoción */
 .promotion-option:nth-child(even) {
-    background-color: #b58863; /* Color base de casilla negra */
-}
-
-.promotion-option:nth-child(odd) {
-    background-color: #f0d9b5; /* Color base de casilla blanca */
+    background-color: #b58863;
 }
 
 .promotion-option:hover {
@@ -123,11 +138,12 @@ body {
 .promotion-option img {
     width: 50px;
     height: 50px;
-    object-fit: contain; /* Asegura que las imágenes no se deformen */
+    object-fit: contain;
+    transition: transform 0.3s ease-in-out;
 }
+
 .promotion-option img:hover {
-    transform: scale(1.5); /* Aumenta el tamaño al 120% */
-    transition: transform 0.3s ease-in-out; /* Suaviza la animación */
+    transform: scale(1.5);
 }
 
 #close-promotion-menu {
@@ -147,14 +163,7 @@ body {
 #game-container {
     display: flex;
     flex-direction: column;
-    align-items: center;
-    position: relative;
-}
-
-#game-container {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start; /* alineado a la izquierda */
+    align-items: flex-start;
     margin: 0 auto;
     width: fit-content;
 }
@@ -162,25 +171,16 @@ body {
 .black-info,
 .white-info {
     position: absolute;
-    left: 0; /* Alineado con el borde izquierdo del tablero */
-    width: fit-content; /* Ajusta el ancho al contenido */
+    left: 0;
+    width: fit-content;
 }
 
 .black-info {
-    top: -70px; /* Ajusta la distancia desde el tablero */
+    top: -70px;
 }
 
 .white-info {
-    bottom: -70px; /* Ajusta la distancia desde el tablero */
-}
-
-.board {
-    display: grid;
-    grid-template-columns: repeat(8, 60px);
-    grid-template-rows: repeat(8, 60px);
-    width: fit-content;
-    margin: auto;
-    position: relative; /* Necesario para posicionar los elementos absolutos */
+    bottom: -70px;
 }
 
 .player {
@@ -189,16 +189,6 @@ body {
     gap: 10px;
     padding: 3px;
     justify-content: center;
-}
-
-.player.black {
-    border-top-left-radius: 5px;
-    border-top-right-radius: 5px;
-}
-
-.player.white {
-    border-bottom-left-radius: 5px;
-    border-bottom-right-radius: 5px;
 }
 
 .player-img {
@@ -216,6 +206,7 @@ body {
     padding: 5px 10px;
     border-radius: 5px;
 }
+
 .hidden {
     display: none;
 }

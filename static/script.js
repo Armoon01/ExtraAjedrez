@@ -29,31 +29,70 @@ function renderBoard(board, kingInCheck = null) {
 
             const piece = board[i][j];
             if (piece) {
-                cell.innerHTML = pieceSymbol(piece);
+                const pieceImg = document.createElement('img');
+                pieceImg.src = `/static/images/${piece.color[0]}${piece.type}.png`;
+                pieceImg.className = 'piece-img';
+                pieceImg.draggable = piece.color === currentTurn;
+
+                pieceImg.addEventListener('dragstart', (e) => handleDragStart(e, i, j));
+                pieceImg.addEventListener('dragend', handleDragEnd);
+                cell.appendChild(pieceImg);
             }
 
             if (kingInCheck && kingInCheck[0] === i && kingInCheck[1] === j) {
                 cell.classList.add('blink');
-                setTimeout(() => {
-                    cell.classList.remove('blink');
-                }, 1000);
+                setTimeout(() => cell.classList.remove('blink'), 1000);
             }
 
+            cell.addEventListener('dragover', handleDragOver);
+            cell.addEventListener('drop', (e) => handleDrop(e, i, j));
             cell.addEventListener('click', () => handleClick(i, j));
+
             boardDiv.appendChild(cell);
         }
     }
 }
 
-function pieceSymbol(piece) {
-    const fileName = `${piece.color[0]}${piece.type}.png`; 
-    return `<img src="/static/images/${fileName}" class="piece-img">`;
+function handleDragStart(e, x, y) {
+    if (gameOver) return;
+
+    e.dataTransfer.setData('text/plain', JSON.stringify({ from: [x, y] }));
+    e.dataTransfer.effectAllowed = "move"; // Permitir solo mover, no copiar
+    selected = [x, y];
+    clearHighlights();
+    showLegalMoves(x, y);
+
+    // Configurar una imagen fantasma transparente
+    const img = new Image();
+    img.src = ''; // Imagen vacía para que no se muestre nada
+    e.dataTransfer.setDragImage(img, 0, 0);
+
+    // Agregar la clase "dragging" a la pieza
+    e.target.classList.add("dragging");
 }
 
-function clearHighlights() {
-    document.querySelectorAll(".cell").forEach(cell => {
-        cell.classList.remove("selected-cell", "legal-move");
-    });
+function handleDragEnd(e) {
+    // Eliminar la clase "dragging" de la pieza
+    e.target.classList.remove("dragging");
+}
+
+function handleDragOver(e) {
+
+    e.preventDefault(); // Necesario para permitir el drop
+    e.stopPropagation()
+    e.dataTransfer.dropEffect = "move"; // Mostrar que el elemento se moverá
+}
+
+async function handleDrop(e, x, y) {
+    e.preventDefault();
+    const data = e.dataTransfer.getData('text/plain');
+    if (!data) return;
+
+    const from = JSON.parse(data).from;
+    const to = [x, y];
+
+    await attemptMove(from, to);
+    selected = null;
 }
 
 async function handleClick(x, y) {
@@ -68,12 +107,10 @@ async function handleClick(x, y) {
 
     if (!selected) {
         if (!pieceImg || !piece || piece.color !== currentTurn) return;
-
         selected = [x, y];
         clearHighlights();
         await showLegalMoves(x, y);
     } else {
-        // Si clicás en otra pieza propia, se actualiza la selección
         if (piece && piece.color === currentTurn) {
             selected = [x, y];
             clearHighlights();
@@ -81,97 +118,47 @@ async function handleClick(x, y) {
             return;
         }
 
-        // Intentar mover
-        const moveRes = await fetch('/api/move', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ from: selected, to: [x, y] })
-        });
-
-        const result = await moveRes.json();
-
-        if (!result.success) {
-            if (result.move_does_not_cover_check) {
-                const kingCell = document.querySelector(
-                    `.cell[data-pos="${result.king_position[0]},${result.king_position[1]}"]`
-                );
-                if (kingCell) {
-                    kingCell.classList.add('blink');
-                    setTimeout(() => {
-                        kingCell.classList.remove('blink');
-                    }, 1000);
-                }
-
-                clearHighlights();
-                await showLegalMoves(selected[0], selected[1]);
-
-                // ❗ No limpiar la selección
-                return;
-            }
-
-            // Si el error es otro, sí limpiamos
-            selected = null;
-            return;
-        }
-
-        // Movimiento válido
-        await loadBoard();
-
-        if (result.promotion_required) {
-            showPromotionMenu(result, selected, [x, y]);
-            return;
-        }
-
-        currentTurn = result.turn;
-        switchTimer();
+        await attemptMove(selected, [x, y]);
         selected = null;
     }
 }
 
-function showPromotionMenu(result, from, to) {
-    const menu = document.getElementById("promotion-menu");
-    menu.classList.remove("hidden");
+async function attemptMove(from, to) {
+    const moveRes = await fetch('/api/move', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ from, to })
+    });
 
-    const pieceColor = result.promotion_piece_color;
-    if (!pieceColor) {
-        console.error("No se encontró el color de la pieza para la promoción.");
+    const result = await moveRes.json();
+
+    if (!result.success) {
+        if (result.move_does_not_cover_check) {
+            const kingCell = document.querySelector(
+                `.cell[data-pos="${result.king_position[0]},${result.king_position[1]}"]`
+            );
+            if (kingCell) {
+                kingCell.classList.add('blink');
+                setTimeout(() => kingCell.classList.remove('blink'), 1000);
+            }
+
+            clearHighlights();
+            await showLegalMoves(from[0], from[1]);
+        }
+        selected = null;
         return;
     }
 
-    const promotionOptions = document.querySelectorAll(".promotion-option img");
-    const pieceTypes = ["queen", "rook", "bishop", "knight"];
-    promotionOptions.forEach((img, index) => {
-        const pieceType = pieceTypes[index];
-        img.src = `/static/images/${pieceColor[0]}${pieceType[0]}.png`;
-        img.alt = `${pieceColor} ${pieceType}`;
-    });
+    await loadBoard();
 
-    document.querySelectorAll(".promotion-option").forEach((option, index) => {
-        option.onclick = async () => {
-            const promotionChoice = pieceTypes[index];
+    if (result.promotion_required) {
+        showPromotionMenu(result, from, to);
+        return;
+    }
 
-            const promotionRes = await fetch('/promote', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ from, to, piece_type: promotionChoice })
-            });
-
-            const promotionResult = await promotionRes.json();
-
-            if (!promotionResult.success) {
-                alert(promotionResult.error || "Error al promover la pieza.");
-            } else {
-                currentTurn = promotionResult.turn;
-                await loadBoard();
-            }
-
-            menu.classList.add("hidden");
-        };
-    });
-
-    document.getElementById("close-promotion-menu").onclick = () => {
-        menu.classList.add("hidden");
-    };
+    currentTurn = result.turn;
+    switchTimer();
+    selected = null;
 }
 
 async function showLegalMoves(row, col) {
@@ -195,6 +182,12 @@ async function showLegalMoves(row, col) {
     }
 }
 
+function clearHighlights() {
+    document.querySelectorAll(".cell").forEach(cell => {
+        cell.classList.remove("selected-cell", "legal-move");
+    });
+}
+
 let whiteTime = 600;
 let blackTime = 600;
 let currentTimer = "white";
@@ -205,7 +198,7 @@ function startTimer() {
         if (currentTimer === "white") {
             whiteTime--;
             updateTimerDisplay("white", whiteTime);
-            rotateClock("white"); // Rotar la aguja del reloj blanco
+            rotateClock("white");
             if (whiteTime <= 0) {
                 clearInterval(timerInterval);
                 alert("¡El tiempo del jugador blanco se ha agotado!");
@@ -213,7 +206,7 @@ function startTimer() {
         } else {
             blackTime--;
             updateTimerDisplay("black", blackTime);
-            rotateClock("black"); // Rotar la aguja del reloj negro
+            rotateClock("black");
             if (blackTime <= 0) {
                 clearInterval(timerInterval);
                 alert("¡El tiempo del jugador negro se ha agotado!");
@@ -222,22 +215,19 @@ function startTimer() {
     }, 1000);
 }
 
-let whiteClockAngle = 0; // Ángulo inicial para el reloj blanco
-let blackClockAngle = 0; // Ángulo inicial para el reloj negro
+let whiteClockAngle = 0;
+let blackClockAngle = 0;
 
 function rotateClock(player) {
     const clockHand = document.getElementById(`${player}-clock-hand`);
-    if (!clockHand) {
-        console.error(`No se encontró el elemento del reloj para ${player}`);
-        return;
-    }
+    if (!clockHand) return;
 
     if (player === "white") {
-        whiteClockAngle = (whiteClockAngle + 90) % 360; // Incrementar 90 grados por segundo
-        clockHand.setAttribute("transform", `rotate(${whiteClockAngle} 50 50)`); // Rotar alrededor del centro (50, 50)
+        whiteClockAngle = (whiteClockAngle + 90) % 360;
+        clockHand.setAttribute("transform", `rotate(${whiteClockAngle} 50 50)`);
     } else {
-        blackClockAngle = (blackClockAngle + 90) % 360; // Incrementar 90 grados por segundo
-        clockHand.setAttribute("transform", `rotate(${blackClockAngle} 50 50)`); // Rotar alrededor del centro (50, 50)
+        blackClockAngle = (blackClockAngle + 90) % 360;
+        clockHand.setAttribute("transform", `rotate(${blackClockAngle} 50 50)`);
     }
 }
 
@@ -247,20 +237,11 @@ function updateTimerDisplay(player, time) {
     const timerElement = document.querySelector(`.${player}-timer`);
     timerElement.textContent = `${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
 }
+
 function switchTimer() {
-    // Alternar el turno entre blanco y negro
     currentTimer = currentTimer === "white" ? "black" : "white";
-
-    console.log("currentTimer", currentTimer);
-
-    // Mostrar el reloj del jugador actual y ocultar el del otro jugador
-    if (currentTimer === "white") {
-        document.querySelector(".white-clock").classList.remove("hidden");
-        document.querySelector(".black-clock").classList.add("hidden");
-    } else {
-        document.querySelector(".white-clock").classList.add("hidden");
-        document.querySelector(".black-clock").classList.remove("hidden");
-    }
+    document.querySelector(".white-clock").classList.toggle("hidden", currentTimer !== "white");
+    document.querySelector(".black-clock").classList.toggle("hidden", currentTimer !== "black");
 }
 
 window.onload = () => {
@@ -269,3 +250,11 @@ window.onload = () => {
     document.querySelector(".white-clock").classList.remove("hidden");
     document.querySelector(".black-clock").classList.add("hidden");
 };
+document.addEventListener("dragover", (e) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "none";
+});
+
+document.addEventListener("drop", (e) => {
+    e.preventDefault();
+});
