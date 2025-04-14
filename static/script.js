@@ -122,7 +122,51 @@ async function handleClick(x, y) {
         selected = null;
     }
 }
+function showPromotionMenu(result, from, to) {
+    const menu = document.getElementById("promotion-menu");
+    menu.classList.remove("hidden");
 
+    const pieceColor = result.promotion_piece_color;
+    if (!pieceColor) {
+        console.error("No se encontró el color de la pieza para la promoción.");
+        return;
+    }
+
+    const promotionOptions = document.querySelectorAll(".promotion-option img");
+    const pieceTypes = ["queen", "rook", "bishop", "knight"];
+    promotionOptions.forEach((img, index) => {
+        const pieceType = pieceTypes[index];
+        img.src = `/static/images/${pieceColor[0]}${pieceType[0]}.png`;
+        img.alt = `${pieceColor} ${pieceType}`;
+    });
+
+    document.querySelectorAll(".promotion-option").forEach((option, index) => {
+        option.onclick = async () => {
+            const promotionChoice = pieceTypes[index];
+
+            const promotionRes = await fetch('/promote', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ from, to, piece_type: promotionChoice })
+            });
+
+            const promotionResult = await promotionRes.json();
+
+            if (!promotionResult.success) {
+                alert(promotionResult.error || "Error al promover la pieza.");
+            } else {
+                currentTurn = promotionResult.turn;
+                await loadBoard();
+            }
+
+            menu.classList.add("hidden");
+        };
+    });
+
+    document.getElementById("close-promotion-menu").onclick = () => {
+        menu.classList.add("hidden");
+    };
+}
 async function attemptMove(from, to) {
     const moveRes = await fetch('/api/move', {
         method: 'POST',
