@@ -177,6 +177,9 @@ async function attemptMove(from, to) {
     }
     else if (result.promotion_required) {
         playSound('promote.mp3'); // Sonido de promoción
+        if(result.in_check){
+            playSound('check.mp3'); // Sonido de jaque
+        }
     } else {
         playSound('move-self.mp3'); // Sonido de movimiento normal
     }
