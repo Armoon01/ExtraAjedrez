@@ -172,7 +172,10 @@ async function attemptMove(from, to) {
         playSound('castle.mp3'); // Sonido de enroque
     } else if (result.captured_piece) {
         playSound('capture.mp3'); // Sonido de captura
-    } else if (result.promotion_required) {
+    } else if(result.in_check) {
+        playSound('capture.mp3'); // Sonido de jaque
+    }
+    else if (result.promotion_required) {
         playSound('promote.mp3'); // Sonido de promoción
     } else {
         playSound('move-self.mp3'); // Sonido de movimiento normal
