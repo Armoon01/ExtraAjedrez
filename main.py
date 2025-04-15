@@ -5,6 +5,7 @@ from app.pieces.knight import Knight
 from app.pieces.bishop import Bishop
 from app.pieces.rook import Rook
 from app.pieces.queen import Queen
+from app.pieces.king import King
 
 app = Flask(__name__, static_url_path="/static", static_folder="static", template_folder="templates")
 
@@ -36,15 +37,14 @@ def get_board():
 
 @app.route("/legal_moves", methods=["POST"])
 def legal_moves():
-    data = request.get_json()
-    row, col = data["row"], data["col"]
-
-    piece = game.board[row][col]
-    if piece is None:
-        return jsonify({"moves": []})
-
-    moves = piece.get_legal_moves((row, col), game.board, game.last_move)
-    return jsonify({"moves": moves})
+        data = request.get_json()
+        row, col = data["row"], data["col"]
+        piece = game.board[row][col]
+        if piece is None:
+            return jsonify({"moves": []})
+        # Usar game.get_legal_moves para incluir casos especiales como el enroque
+        moves = game.get_legal_moves((row, col), game.board, game.last_move)
+        return jsonify({"moves": moves})
 
 @app.route("/api/move", methods=["POST"])
 def move_piece():
@@ -59,6 +59,12 @@ def move_piece():
     # Realizar el movimiento
     result = game.move_piece(from_pos, to_pos, promotion_choice)
 
+    # Verificar si el movimiento fue un enroque
+    result["castle"] = False
+    piece = game.board[to_pos[0]][to_pos[1]]
+    if isinstance(piece, King) and abs(to_pos[1] - from_pos[1]) == 2:
+        result["castle"] = True
+
     # Verificar si el rey quedó en jaque después del movimiento
     in_check = game.is_in_check(game.current_turn)
     king_pos = game.get_king_position(game.current_turn)
@@ -69,7 +75,6 @@ def move_piece():
     result["move_does_not_cover_check"] = not move_covers_check
 
     # Verificar si se requiere promoción
-    piece = game.board[to_pos[0]][to_pos[1]]
     if isinstance(piece, Pawn) and (to_pos[0] == 0 or to_pos[0] == 7):
         result["promotion_required"] = True
         result["promotion_piece_color"] = piece.color

@@ -182,7 +182,7 @@ async function attemptMove(from, to) {
     }
 
     // Reproducir sonido según el tipo de movimiento
-    if (result.castling) {
+    if (result.castle) {
         playSound('castle.mp3'); // Sonido de enroque
     } else if (result.captured_piece) {
         playSound('capture.mp3'); // Sonido de captura
@@ -210,6 +210,7 @@ async function showLegalMoves(row, col) {
     });
 
     const result = await response.json();
+    console.log("Movimientos legales:", result.moves);
     clearHighlights();
 
     if (result.moves.length > 0) {
@@ -222,7 +223,6 @@ async function showLegalMoves(row, col) {
         });
     }
 }
-
 function clearHighlights() {
     document.querySelectorAll(".cell").forEach(cell => {
         cell.classList.remove("selected-cell", "legal-move");

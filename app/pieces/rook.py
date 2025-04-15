@@ -2,6 +2,7 @@ class Rook:
     def __init__(self, color):
         self.color = color
         self.name = "R"
+        self.has_moved = False
 
     def get_legal_moves(self, pos, board, last_move):
         x, y = pos

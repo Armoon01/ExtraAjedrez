@@ -47,13 +47,67 @@ class ChessBoard:
         x1, y1 = from_pos
         x2, y2 = to_pos
 
-        if promotion_choice:
-            piece = self.board[x2][y2]
-            if not isinstance(piece, Pawn) or (x2 != 0 and x2 != 7):
+        piece = self.board[x1][y1]
+        if not piece:
+            return {
+                "success": False,
+                "message": "No hay ninguna pieza en la posición inicial.",
+                "board": self.get_board_state()
+            }
+
+        if piece.color != self.current_turn:
+            return {
+                "success": False,
+                "message": f"No es el turno de las piezas {piece.color}.",
+                "board": self.get_board_state()
+            }
+
+        legal_moves = self.get_legal_moves((x1, y1), self.board, self.last_move)
+        if (x2, y2) not in legal_moves:
+            return {
+                "success": False,
+                "message": "Movimiento no permitido.",
+                "board": self.get_board_state()
+            }
+
+        # Verificar si el movimiento es un enroque
+        if isinstance(piece, King) and abs(y2 - y1) == 2:
+            if y2 > y1:  # Enroque corto
+                self.board[x1][5] = self.board[x1][7]  # Mover la torre
+                self.board[x1][7] = None
+            else:  # Enroque largo
+                self.board[x1][3] = self.board[x1][0]  # Mover la torre
+                self.board[x1][0] = None
+
+        # Realizar el movimiento normal
+        captured_piece = self.board[x2][y2]
+        self.board[x2][y2] = piece
+        self.board[x1][y1] = None
+
+        # Actualizar el estado del rey o la torre si se movieron
+        if isinstance(piece, King):
+            piece.has_moved = True
+        if isinstance(piece, Rook):
+            piece.has_moved = True
+
+        # Manejar captura al paso
+        if isinstance(piece, Pawn) and self.last_move:
+            last_from, last_to, last_piece = self.last_move
+            if abs(x1 - x2) == 1 and y1 != y2 and not captured_piece:
+                if isinstance(last_piece, Pawn) and abs(last_from[0] - last_to[0]) == 2 and last_to[1] == y2:
+                    captured_piece = self.board[last_to[0]][last_to[1]]
+                    self.board[last_to[0]][last_to[1]] = None
+
+        # Manejar promoción
+        if isinstance(piece, Pawn) and (x2 == 0 or x2 == 7):
+            if promotion_choice is None:
                 return {
-                    "success": False,
-                    "message": "No hay un peón para promover en la posición final.",
-                    "board": self.get_board_state()
+                    "success": True,
+                    "promotion_required": True,
+                    "board": self.get_board_state(),
+                    "turn": self.current_turn,
+                    "in_check": self.is_in_check(self.current_turn),
+                    "king_position": self.get_king_position(self.current_turn)
                 }
             if promotion_choice not in ["queen", "rook", "bishop", "knight"]:
                 return {
@@ -70,63 +124,8 @@ class ChessBoard:
             elif promotion_choice == "knight":
                 self.board[x2][y2] = Knight(piece.color)
 
-            self.current_turn = "black" if self.current_turn == "white" else "white"
-
-            return {
-                "success": True,
-                "message": "Promoción realizada con éxito.",
-                "board": self.get_board_state(),
-                "turn": self.current_turn,
-                "in_check": self.is_in_check(self.current_turn),
-                "king_position": self.get_king_position(self.current_turn)
-            }
-
-        piece = self.board[x1][y1]
-        if not piece:
-            return {
-                "success": False,
-                "message": "No hay ninguna pieza en la posición inicial.",
-                "board": self.get_board_state()
-            }
-        if piece.color != self.current_turn:
-            return {
-                "success": False,
-                "message": f"No es el turno de las piezas {piece.color}.",
-                "board": self.get_board_state()
-            }
-
-        legal_moves = self.get_legal_moves((x1, y1), self.board, self.last_move)
-        if (x2, y2) not in legal_moves:
-            return {
-                "success": False,
-                "message": "Movimiento no permitido.",
-                "board": self.get_board_state()
-            }
-
-        captured_piece = self.board[x2][y2]
-        self.board[x2][y2] = piece
-        self.board[x1][y1] = None
-
-        if isinstance(piece, Pawn) and self.last_move:
-            last_from, last_to, last_piece = self.last_move
-            if abs(x1 - x2) == 1 and y1 != y2 and not captured_piece:
-                if isinstance(last_piece, Pawn) and abs(last_from[0] - last_to[0]) == 2 and last_to[1] == y2:
-                    captured_piece = self.board[last_to[0]][last_to[1]]
-                    self.board[last_to[0]][last_to[1]] = None
-
+        # Actualizar el turno
         self.last_move = (from_pos, to_pos, piece)
-
-        if isinstance(piece, Pawn) and (x2 == 0 or x2 == 7):
-            if promotion_choice is None:
-                return {
-                    "success": True,
-                    "promotion_required": True,
-                    "board": self.get_board_state(),
-                    "turn": self.current_turn,
-                    "in_check": self.is_in_check(self.current_turn),
-                    "king_position": self.get_king_position(self.current_turn)
-                }
-
         self.current_turn = "black" if self.current_turn == "white" else "white"
 
         return {
@@ -147,6 +146,22 @@ class ChessBoard:
 
         possible_moves = piece.get_legal_moves((x, y), board, last_move)
 
+        # Si la pieza es un rey, verificar el enroque
+        if isinstance(piece, King) and not piece.has_moved:
+            print(f"Verificando enroque para el rey en posición {pos}")
+            # Enroque corto (hacia la derecha)
+            if self.can_castle_kingside(piece.color):
+                print("Enroque corto permitido")
+                possible_moves.append((x, y + 2))
+            else:
+                print("Enroque corto no permitido")
+            # Enroque largo (hacia la izquierda)
+            if self.can_castle_queenside(piece.color):
+                print("Enroque largo permitido")
+                possible_moves.append((x, y - 2))
+            else:
+                print("Enroque largo no permitido")
+
         legal_moves = []
         for move in possible_moves:
             from_pos = (x, y)
@@ -163,6 +178,51 @@ class ChessBoard:
             board[to_pos[0]][to_pos[1]] = captured_piece
 
         return legal_moves
+    def can_castle_kingside(self, color):
+        row = 7 if color == "white" else 0
+        king = self.board[row][4]
+        rook = self.board[row][7]
+
+        if not isinstance(king, King) or not isinstance(rook, Rook):
+            print("El rey o la torre no están en las posiciones correctas para el enroque corto.")
+            return False
+        if king.has_moved or rook.has_moved:
+            print("El rey o la torre ya se han movido.")
+            return False
+        if self.board[row][5] or self.board[row][6]:
+            print("Hay piezas entre el rey y la torre.")
+            return False
+        if self.is_in_check(color):
+            print("El rey está en jaque.")
+            return False
+        if self.does_move_cover_check((row, 4), (row, 5)) or self.does_move_cover_check((row, 4), (row, 6)):
+            print("El rey pasa por una casilla atacada.")
+            return False
+
+        return True
+
+    def can_castle_queenside(self, color):
+        row = 7 if color == "white" else 0
+        king = self.board[row][4]
+        rook = self.board[row][0]
+
+        if not isinstance(king, King) or not isinstance(rook, Rook):
+            print("El rey o la torre no están en las posiciones correctas para el enroque largo.")
+            return False
+        if king.has_moved or rook.has_moved:
+            print("El rey o la torre ya se han movido.")
+            return False
+        if self.board[row][1] or self.board[row][2] or self.board[row][3]:
+            print("Hay piezas entre el rey y la torre.")
+            return False
+        if self.is_in_check(color):
+            print("El rey está en jaque.")
+            return False
+        if self.does_move_cover_check((row, 4), (row, 3)) or self.does_move_cover_check((row, 4), (row, 2)):
+            print("El rey pasa por una casilla atacada.")
+            return False
+
+        return True
 
     def get_board_state(self):
         state = []
