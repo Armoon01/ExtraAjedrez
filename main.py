@@ -87,9 +87,12 @@ def move_piece():
     if game.is_game_over():
         result["game_over"] = True
         result["winner"] = game.get_winner()
+        result["winner_color"] = game.get_winner()
+        result["loser_king_position"] = game.get_king_position(game.get_loser())  # Posición del rey perdedor
+        result["king_position"] = game.get_king_position(game.get_winner())  # Posición del rey ganador
     else:
         result["game_over"] = False
-
+    
     return jsonify(result)
 @app.route("/promote", methods=["POST"])
 def promote():
@@ -124,5 +127,10 @@ def promote():
         "board": game.get_board_state(),
         "turn": game.current_turn
     })
+@app.route("/api/reset", methods=["POST"])
+def reset_game():
+    global game
+    game = ChessBoard()  # Reiniciar el tablero
+    return jsonify({"success": True, "board": game.get_board_state(), "turn": game.current_turn})
 if __name__ == "__main__":
     app.run(debug=True)

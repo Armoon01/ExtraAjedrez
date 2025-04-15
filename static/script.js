@@ -9,7 +9,6 @@ async function loadBoard() {
     gameOver = data.game_over;
 
     if (gameOver) {
-        alert(data.winner ? `${data.winner} gana el juego` : "Empate");
         return;
     }
 
@@ -20,6 +19,7 @@ async function loadBoard() {
 function renderBoard(board, kingInCheck = null) {
     const boardDiv = document.getElementById('board');
     boardDiv.innerHTML = '';
+    
 
     for (let i = 0; i < 8; i++) {
         for (let j = 0; j < 8; j++) {
@@ -124,7 +124,19 @@ function showPromotionMenu(result, from, to) {
     const modal = document.getElementById("promotion-menu");
     modal.classList.remove("hidden");
 
+    // Determinar el color del jugador que está promoviendo
+    const promotionColor = result.promotion_piece_color; // Esto debe venir del backend
+
+    // Actualizar las imágenes de las piezas en el menú de promoción
     const buttons = document.querySelectorAll(".promotion-option");
+    buttons.forEach(button => {
+        const pieceType = button.dataset.piece;
+        const pieceImg = button.querySelector("img");
+        pieceImg.src = `/static/images/${promotionColor[0]}${pieceType[0]}.png`; // Actualizar la imagen
+        pieceImg.alt = `${promotionColor} ${pieceType}`;
+    });
+
+    // Configurar los eventos de clic para las opciones de promoción
     buttons.forEach(button => {
         button.onclick = async () => {
             const promotionChoice = button.dataset.piece;
@@ -142,16 +154,6 @@ function showPromotionMenu(result, from, to) {
                 alert(promotionResult.error || "Error al promover la pieza.");
             } else {
                 currentTurn = promotionResult.turn;
-                const moveRes = await fetch('/api/move', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ from, to })
-                });
-            
-                const result = await moveRes.json();
-                if (result.in_check) {
-                    playSound('capture.mp3'); // Sonido de jaque
-                }
                 await loadBoard(); // Recargar el tablero después de la promoción
             }
 
@@ -159,6 +161,7 @@ function showPromotionMenu(result, from, to) {
         };
     });
 
+    // Configurar el botón de cerrar el menú
     document.getElementById("close-promotion-menu").onclick = () => {
         modal.classList.add("hidden");
     };
@@ -179,16 +182,15 @@ async function attemptMove(from, to) {
 
     // Reproducir sonido según el tipo de movimiento
     if (result.castle) {
-        playSound('castle.mp3'); // Sonido de enroque
+        playSound('castle.mp3');
     } else if (result.captured_piece) {
-        playSound('capture.mp3'); // Sonido de captura
-    } else if(result.in_check) {
-        playSound('capture.mp3'); // Sonido de jaque
-    }
-    else if (result.promotion_required) {
-        playSound('promote.mp3'); // Sonido de promoción
+        playSound('capture.mp3');
+    } else if (result.in_check) {
+        playSound('capture.mp3');
+    } else if (result.promotion_required) {
+        playSound('promote.mp3');
     } else {
-        playSound('move-self.mp3'); // Sonido de movimiento normal
+        playSound('move-self.mp3');
     }
 
     await loadBoard();
@@ -198,8 +200,64 @@ async function attemptMove(from, to) {
         return;
     }
 
+    // Mostrar animación de jaque mate si el juego ha terminado
+    if (result.game_over) {
+        console.log(result)
+        console.log("Juego terminado:", result.winner);
+        console.log(result.king_position, result.loser_king_position);
+        if (result.king_position && result.loser_king_position) {
+            console.log("entre al if")
+            renderBoard(result.board, result.king_in_check);
+            showCheckmateAnimation(result.king_position, result.loser_king_position);
+        } else {
+            console.error("Faltan posiciones del rey en la respuesta del backend.");
+        }
+
+        // Detener el temporizador
+        clearInterval(timerInterval);
+
+        document.getElementById("reset-game").classList.remove("hidden");
+        renderBoard(result.board, result.king_in_check);
+        return;
+    }
+
     currentTurn = result.turn;
     switchTimer();
+}
+function showCheckmateAnimation(winnerKingPosition, loserKingPosition) {
+    console.log("Mostrar animación de jaque mate");
+
+    const board = document.getElementById('board');
+    const boardRect = board.getBoundingClientRect();
+    const cellSize = boardRect.width / 8; // Tamaño de una celda (asumiendo un tablero de 8x8)
+
+    const winner = document.getElementById("winner");
+    const checkmate = document.getElementById("checkmate");
+
+    // Posicionar la animación de Winner sobre la casilla del rey ganador
+    winner.style.left = `${winnerKingPosition[1] * cellSize + boardRect.left}px`;
+    winner.style.top = `${winnerKingPosition[0] * cellSize + boardRect.top}px`;
+    winner.style.width = `${cellSize}px`;
+    winner.style.height = `${cellSize}px`;
+    winner.classList.remove("hidden");
+
+    // Posicionar la animación de Checkmate sobre la casilla del rey perdedor
+    checkmate.style.left = `${loserKingPosition[1] * cellSize + boardRect.left}px`;
+    checkmate.style.top = `${loserKingPosition[0] * cellSize + boardRect.top}px`;
+    checkmate.style.width = `${cellSize}px`;
+    checkmate.style.height = `${cellSize}px`;
+    checkmate.classList.remove("hidden");
+
+    // Activar la animación de reducción y movimiento a la esquina superior derecha
+    setTimeout(() => {
+        winner.classList.add("shrink", "winner-final");
+        checkmate.classList.add("shrink", "checkmate-final");
+
+        // Desvanecer el texto durante la animación
+        winner.querySelector("span").style.opacity = "0";
+        checkmate.querySelector("span").style.opacity = "0";
+    }, 3000);
+
 }
 async function showLegalMoves(row, col) {
     const response = await fetch("/legal_moves", {
@@ -270,7 +328,6 @@ function rotateClock(player) {
         clockHand.setAttribute("transform", `rotate(${blackClockAngle} 50 50)`);
     }
 }
-
 function updateTimerDisplay(player, time) {
     const minutes = Math.floor(time / 60);
     const seconds = time % 60;
@@ -286,6 +343,43 @@ function switchTimer() {
 function playSound(sound) {
     const audio = new Audio(`/static/sounds/${sound}`);
     audio.play();
+}
+document.getElementById("reset-game").addEventListener("click", async () => {
+    const res = await fetch('/api/reset', { method: 'POST' });
+    const data = await res.json();
+
+    if (data.success) {
+        console.log("Juego reiniciado");
+
+        // Reiniciar el tablero
+        renderBoard(data.board);
+        document.getElementById("turn").innerText = "Turno: " + data.turn;
+
+        // Reiniciar los relojes
+        whiteTime = 600; // 10 minutos en segundos
+        blackTime = 600; // 10 minutos en segundos
+        currentTimer = "white"; // Reiniciar al jugador blanco
+        clearInterval(timerInterval); // Detener el temporizador actual
+        updateTimerDisplay("white", whiteTime);
+        updateTimerDisplay("black", blackTime);
+        startTimer(); // Iniciar el temporizador para el jugador blanco
+
+        // Mostrar el reloj del jugador blanco y ocultar el del jugador negro
+        document.querySelector(".white-clock").classList.remove("hidden");
+        document.querySelector(".black-clock").classList.add("hidden");
+
+        // Reiniciar el estado del juego
+        gameOver = false;
+
+        // Ocultar el botón de reinicio
+        document.getElementById("reset-game").classList.add("hidden");
+    }
+});
+function updateTimerDisplay(player, time) {
+    const minutes = Math.floor(time / 60);
+    const seconds = time % 60;
+    const timerElement = document.querySelector(`.${player}-timer`);
+    timerElement.textContent = `${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
 }
 window.onload = () => {
     loadBoard();

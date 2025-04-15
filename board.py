@@ -256,7 +256,12 @@ class ChessBoard:
                     if king_pos in piece.get_legal_moves((x, y), self.board, self.last_move):
                         return True
         return False
-
+    def get_loser(self):
+        if self.winner == "white":
+            return "black"
+        elif self.winner == "black":
+            return "white"
+        return None 
     def get_king_position(self, color):
         for x in range(8):
             for y in range(8):
@@ -266,17 +271,21 @@ class ChessBoard:
         return None
     def is_game_over(self):
         """Verifica si el jugador actual tiene algún movimiento legal."""
+        print(f"Verificando si el juego ha terminado. Turno actual: {self.current_turn}")
         for row in range(8):
             for col in range(8):
                 piece = self.board[row][col]
                 if piece and piece.color == self.current_turn:
-                    moves = piece.get_legal_moves((row, col), self.board, self.last_move)
+                    moves = self.get_legal_moves((row, col), self.board, self.last_move)
                     if moves:
+                        print(f"La pieza {piece.name} en ({row}, {col}) tiene movimientos legales: {moves}")
                         return False
         # Si no hay movimientos legales, es jaque mate o empate (ahogado)
         if self.is_in_check(self.current_turn):
+            print(f"El rey de {self.current_turn} está en jaque. Es jaque mate.")
             self.winner = "black" if self.current_turn == "white" else "white"
         else:
+            print(f"El rey de {self.current_turn} no está en jaque. Es un empate por ahogado.")
             self.winner = None  # Empate por ahogado
         return True
 

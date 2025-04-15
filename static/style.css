@@ -47,6 +47,7 @@ body {
     touch-action: none;
     will-change: transform;
     user-select: none;
+    z-index: 5;
     
 }
 .piece.dragging {
@@ -215,4 +216,95 @@ body {
 .black-clock {
     display: inline-block;
     margin-left: 10px;
+}
+/* Estilo base para las animaciones */
+
+.end-message {
+    position: absolute;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%; /* Tamaño inicial igual al de la celda */
+    height: 100%;
+    border-radius: 0; /* Sin bordes redondeados inicialmente */
+    transition: all 1s ease-in-out;
+    z-index: 999;
+  }
+  
+  .end-message svg {
+    width: 100%;
+    height: 100%;
+    fill: white;
+    transition: all 1s ease-in-out;
+  }
+  
+  .end-message span {
+    position: absolute;
+    color: white;
+    font-size: 16px;
+    transition: opacity 0.5s ease-in-out, transform 1s ease-in-out;
+    z-index: 1;
+    top: -20px;
+    text-align: center;
+    padding: 5px 10px;
+    border-radius: 12px;
+    background: black;
+    opacity: 1;
+  }
+  
+  .shrink {
+    width: 30px; /* Tamaño reducido */
+    height: 30px;
+    border-radius: 50%; /* Convertir en círculo */
+    justify-content: center;
+    align-items: center;
+    gap: 0;
+  }
+  
+  .shrink svg {
+    width: 100%;
+    height: 100%;
+  }
+  
+  .shrink span {
+    opacity: 0;
+    transform: scale(0);
+  }
+  
+  .winner-final {
+    top: 10px; /* Posición en la esquina superior derecha */
+    left: calc(100% - 40px);
+  }
+  
+  .checkmate-final {
+    top: 10px; /* Posición en la esquina superior derecha */
+    left: calc(100% - 40px);
+  }
+  .winner {
+    background: green;
+  }
+
+  .checkmate {
+    background: crimson;
+  }
+  .reset-button {
+    margin-top: 20px;
+    padding: 10px 20px;
+    font-size: 16px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+.hidden {
+    display: none;
+}
+
+.reset-button.hidden {
+    display: none;
+}
+
+.reset-button:hover {
+    background-color: #0056b3;
 }
