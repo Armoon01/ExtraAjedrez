@@ -370,7 +370,14 @@ document.getElementById("reset-game").addEventListener("click", async () => {
 
         // Reiniciar el estado del juego
         gameOver = false;
+        document.getElementById("winner").classList.add("hidden");
+        document.getElementById("checkmate").classList.add("hidden");
 
+        document.getElementById("winner").classList.remove("shrink", "winner-final");
+        document.getElementById("checkmate").classList.remove("shrink", "checkmate-final");
+
+        document.querySelector("#winner span").style.opacity = "1";
+        document.querySelector("#checkmate span").style.opacity = "1";
         // Ocultar el botón de reinicio
         document.getElementById("reset-game").classList.add("hidden");
     }
