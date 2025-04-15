@@ -83,15 +83,6 @@ def move_piece():
 
     # Estado del tablero
     result["board"] = game.get_board_state()
-
-    # Verificar si se capturó una pieza
-    captured_piece = result.get("captured_piece", None)
-    if captured_piece:
-        result["captured_piece"] = {
-            "type": captured_piece.name.lower(),
-            "color": captured_piece.color
-        }
-
     # Verificar si el juego ha terminado
     if game.is_game_over():
         result["game_over"] = True

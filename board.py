@@ -79,8 +79,10 @@ class ChessBoard:
                 self.board[x1][3] = self.board[x1][0]  # Mover la torre
                 self.board[x1][0] = None
 
-        # Realizar el movimiento normal
+        # Registrar la pieza capturada antes de realizar el movimiento
         captured_piece = self.board[x2][y2]
+
+        # Realizar el movimiento normal
         self.board[x2][y2] = piece
         self.board[x1][y1] = None
 
@@ -134,9 +136,12 @@ class ChessBoard:
             "board": self.get_board_state(),
             "turn": self.current_turn,
             "in_check": self.is_in_check(self.current_turn),
-            "king_position": self.get_king_position(self.current_turn)
+            "king_position": self.get_king_position(self.current_turn),
+            "captured_piece": {
+                "type": captured_piece.name.lower(),
+                "color": captured_piece.color
+            } if captured_piece else None  # Incluir información de la pieza capturada
         }
-
     def get_legal_moves(self, pos, board, last_move):
         x, y = pos
         piece = board[x][y]

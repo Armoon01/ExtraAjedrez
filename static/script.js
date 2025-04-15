@@ -163,20 +163,6 @@ async function attemptMove(from, to) {
     const result = await moveRes.json();
 
     if (!result.success) {
-        if (result.move_does_not_cover_check) {
-            const kingCell = document.querySelector(
-                `.cell[data-pos="${result.king_position[0]},${result.king_position[1]}"]`
-            );
-            if (kingCell) {
-                kingCell.classList.add('blink');
-                setTimeout(() => kingCell.classList.remove('blink'), 1000);
-            }
-
-            clearHighlights();
-            await showLegalMoves(from[0], from[1]);
-        }
-
-        // Reproducir sonido de movimiento ilegal
         playSound('illegal.mp3');
         return;
     }
