@@ -142,6 +142,16 @@ function showPromotionMenu(result, from, to) {
                 alert(promotionResult.error || "Error al promover la pieza.");
             } else {
                 currentTurn = promotionResult.turn;
+                const moveRes = await fetch('/api/move', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ from, to })
+                });
+            
+                const result = await moveRes.json();
+                if (result.in_check) {
+                    playSound('capture.mp3'); // Sonido de jaque
+                }
                 await loadBoard(); // Recargar el tablero después de la promoción
             }
 
@@ -172,13 +182,11 @@ async function attemptMove(from, to) {
         playSound('castle.mp3'); // Sonido de enroque
     } else if (result.captured_piece) {
         playSound('capture.mp3'); // Sonido de captura
-    } else if (result.promotion_required) {
+    } else if(result.in_check) {
+        playSound('capture.mp3'); // Sonido de jaque
+    }
+    else if (result.promotion_required) {
         playSound('promote.mp3'); // Sonido de promoción
-        if (result.in_check) {
-            playSound('check.mp3'); // Sonido de jaque al coronar
-        }
-    } else if (result.in_check) {
-        playSound('check.mp3'); // Sonido de jaque
     } else {
         playSound('move-self.mp3'); // Sonido de movimiento normal
     }
