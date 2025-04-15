@@ -355,31 +355,34 @@ document.getElementById("reset-game").addEventListener("click", async () => {
         renderBoard(data.board);
         document.getElementById("turn").innerText = "Turno: " + data.turn;
 
-        // Reiniciar los relojes
+        // Restablecer el estado del juego
+        currentTurn = data.turn; // Reiniciar el turno actual
+        gameOver = false; // Asegurarse de que el juego no esté marcado como terminado
+        // Ocultar las animaciones y restablecer sus propiedades
+        const winner = document.getElementById("winner");
+        const checkmate = document.getElementById("checkmate");
+
+        winner.classList.remove("shrink", "winner-final", "hidden");
+        checkmate.classList.remove("shrink", "checkmate-final", "hidden");
+        winner.classList.add("hidden");
+        winner.style.left = "";
+        winner.style.top = "";
+        winner.style.width = "";
+        winner.style.height = "";
+        winner.querySelector("span").style.opacity = "1";
+
+        checkmate.style.left = "";
+        checkmate.style.top = "";
+        checkmate.style.width = "";
+        checkmate.style.height = "";
+        checkmate.classList.add("hidden");
+        checkmate.querySelector("span").style.opacity = "1";
+        // Reiniciar los temporizadores
         whiteTime = 600; // 10 minutos en segundos
-        blackTime = 600; // 10 minutos en segundos
-        currentTimer = "white"; // Reiniciar al jugador blanco
-        clearInterval(timerInterval); // Detener el temporizador actual
-        updateTimerDisplay("white", whiteTime);
-        updateTimerDisplay("black", blackTime);
-        startTimer(); // Iniciar el temporizador para el jugador blanco
-
-        // Mostrar el reloj del jugador blanco y ocultar el del jugador negro
-        document.querySelector(".white-clock").classList.remove("hidden");
-        document.querySelector(".black-clock").classList.add("hidden");
-
-        // Reiniciar el estado del juego
-        gameOver = false;
-        document.getElementById("winner").classList.add("hidden");
-        document.getElementById("checkmate").classList.add("hidden");
-
-        document.getElementById("winner").classList.remove("shrink", "winner-final");
-        document.getElementById("checkmate").classList.remove("shrink", "checkmate-final");
-
-        document.querySelector("#winner span").style.opacity = "1";
-        document.querySelector("#checkmate span").style.opacity = "1";
-        // Ocultar el botón de reinicio
-        document.getElementById("reset-game").classList.add("hidden");
+        blackTime = 600;
+        clearInterval(timerInterval); // Detener cualquier temporizador activo
+        startTimer(); // Reiniciar el temporizador
+        console.log("Animaciones revertidas.");
     }
 });
 function updateTimerDisplay(player, time) {
