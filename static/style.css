@@ -328,7 +328,6 @@ body {
 
 .end-message.shrink {
     transform: scale(1);
-    opacity: 0;
 }
 .draw-white{
     background-color: #333;
