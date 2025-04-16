@@ -519,7 +519,7 @@ window.onload = () => {
     loadBoard();
     startTimer();
     document.querySelector(".white-clock").classList.remove("hidden");
-    document.querySelector(".black-clock").classList.add("hidden");
+    document.querySelector(".black-clock").classList.add("hidden"); 
 };
 document.addEventListener("dragover", (e) => {
     e.preventDefault();

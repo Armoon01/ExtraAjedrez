@@ -337,8 +337,8 @@ body {
 }
 
 .draw-final {
-    transform: translate(50%, -50%) scale(0.5);
-    opacity: 0;
+    transform: scale(1);
+    opacity: 1;
 }
 .hidden {
     display: none;
