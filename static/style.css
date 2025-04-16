@@ -3,14 +3,13 @@ body {
     text-align: center;
 }
 
-.board {
+#board {
     display: grid;
-    grid-template-columns: repeat(8, 60px);
-    grid-template-rows: repeat(8, 60px);
-    width: fit-content;
-    margin: auto;
-    position: relative;
-    user-select: none;
+    grid-template-columns: repeat(8, 1fr);
+    grid-template-rows: repeat(8, 1fr);
+    position: relative; /* Necesario para posicionar las animaciones */
+    width: 100%; /* Ajustar al contenedor */
+    height: 100%; /* Ajustar al contenedor */
 }
 
 .cell {
@@ -280,12 +279,27 @@ body {
     top: 10px; /* Posición en la esquina superior derecha */
     left: calc(100% - 40px);
   }
+  #winner,
+#checkmate {
+    position: absolute;
+    justify-content: center;
+    align-items: center;
+    width: 100%; /* Tamaño inicial igual al de la celda */
+    height: 100%;
+    z-index: 10; /* Asegúrate de que estén por encima del tablero */
+}
   .winner {
     background: green;
   }
 
   .checkmate {
     background: crimson;
+  }
+  #winner svg{
+    margin-top: 8px;
+  }
+  #checkmate svg{
+    margin-right: 7px;
   }
   .reset-button {
     margin-top: 20px;
@@ -297,6 +311,36 @@ body {
     border-radius: 5px;
     cursor: pointer;
 }
+
+.end-message {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    position: absolute;
+    z-index: 10;
+    transition: transform 0.5s ease, opacity 0.5s ease;
+}
+
+.end-message.hidden {
+    display: none;
+}
+
+.end-message.shrink {
+    transform: scale(1);
+    opacity: 0;
+}
+.draw-white{
+    background-color: #333;
+}
+.draw-black{
+    background-color: #333;
+}
+
+.draw-final {
+    transform: translate(50%, -50%) scale(0.5);
+    opacity: 0;
+}
 .hidden {
     display: none;
 }
@@ -307,4 +351,11 @@ body {
 
 .reset-button:hover {
     background-color: #0056b3;
+}
+.highlight-origin {
+    background-color: rgba(255, 255, 51, 0.3); /* Amarillo claro con transparencia */
+}
+
+.highlight-destination {
+    background-color: rgba(255, 255, 51, 0.5); /* Amarillo más intenso con transparencia */
 }

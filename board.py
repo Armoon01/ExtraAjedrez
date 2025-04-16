@@ -11,6 +11,7 @@ class ChessBoard:
         self.current_turn = "white"
         self.last_move = None
         self.winner = None
+        self.stalemate = False
 
 
     def create_board(self):
@@ -269,9 +270,21 @@ class ChessBoard:
                 if piece and piece.name.lower() == 'k' and piece.color == color:
                     return (x, y)
         return None
+    def setup_stalemate_board(self):
+        """Configura el tablero en una situación de ahogado."""
+        self.board = [[None for _ in range(8)] for _ in range(8)]
+        self.board[7][7] = King("black")  # Rey negro en e1
+        self.board[7][7].has_moved = True
+        self.board[5][6] = Queen("white")  # Reina blanca en a2
+        self.board[5][5] = King("white")  # Rey blanco en a8
+        self.board[5][5].has_moved = True
+        self.current_turn = "black"
+        self.winner = None
     def is_game_over(self):
         """Verifica si el jugador actual tiene algún movimiento legal."""
         print(f"Verificando si el juego ha terminado. Turno actual: {self.current_turn}")
+        
+        # Verificar si el jugador actual tiene movimientos legales
         for row in range(8):
             for col in range(8):
                 piece = self.board[row][col]
@@ -279,14 +292,16 @@ class ChessBoard:
                     moves = self.get_legal_moves((row, col), self.board, self.last_move)
                     if moves:
                         print(f"La pieza {piece.name} en ({row}, {col}) tiene movimientos legales: {moves}")
-                        return False
-        # Si no hay movimientos legales, es jaque mate o empate (ahogado)
+                        return False  # El juego no ha terminado porque hay movimientos legales
+
+        # Si no hay movimientos legales, verificar si es jaque mate o ahogado
         if self.is_in_check(self.current_turn):
-            print(f"El rey de {self.current_turn} está en jaque. Es jaque mate.")
+            self.stalemate = False  # Es jaque mate
             self.winner = "black" if self.current_turn == "white" else "white"
         else:
-            print(f"El rey de {self.current_turn} no está en jaque. Es un empate por ahogado.")
+           
             self.winner = None  # Empate por ahogado
+            self.stalemate = True
         return True
 
     def get_winner(self):

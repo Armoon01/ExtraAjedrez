@@ -11,7 +11,6 @@ app = Flask(__name__, static_url_path="/static", static_folder="static", templat
 
 # Crear el juego
 game = ChessBoard()
-
 @app.route('/')
 def index():
     return render_template('base.html')  # Tu HTML principal
@@ -55,10 +54,10 @@ def move_piece():
 
     # Verificar si el movimiento cubre el jaque antes de realizarlo
     move_covers_check = game.does_move_cover_check(from_pos, to_pos)
-
+    
     # Realizar el movimiento
     result = game.move_piece(from_pos, to_pos, promotion_choice)
-
+    result["last_move"] = {"from": from_pos, "to": to_pos}
     # Verificar si el movimiento fue un enroque
     result["castle"] = False
     piece = game.board[to_pos[0]][to_pos[1]]
@@ -83,6 +82,7 @@ def move_piece():
 
     # Estado del tablero
     result["board"] = game.get_board_state()
+    result["stalemate"] = game.stalemate # Verificar si es un ahogado
     # Verificar si el juego ha terminado
     if game.is_game_over():
         result["game_over"] = True
@@ -90,6 +90,10 @@ def move_piece():
         result["winner_color"] = game.get_winner()
         result["loser_king_position"] = game.get_king_position(game.get_loser())  # Posición del rey perdedor
         result["king_position"] = game.get_king_position(game.get_winner())  # Posición del rey ganador
+        if game.stalemate:
+            result["stalemate"] = True
+            result["black_king_position"] = game.get_king_position("black")
+            result["white_king_position"] = game.get_king_position("white")
     else:
         result["game_over"] = False
     
