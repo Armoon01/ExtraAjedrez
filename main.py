@@ -103,7 +103,7 @@ def promote():
     data = request.get_json()
     from_pos = tuple(data["from"])
     to_pos = tuple(data["to"])
-    piece_type = data["piece_type"]
+    piece_type = data["piece_type"].lower()  # Convertir a minúsculas para evitar problemas de coincidencia
 
     # Verificar que la pieza en la posición 'to' sea un peón
     piece = game.board[to_pos[0]][to_pos[1]]
@@ -116,7 +116,7 @@ def promote():
         "rook": Rook,
         "bishop": Bishop,
         "knight": Knight
-    }.get(piece_type.lower())
+    }.get(piece_type)
 
     if promoted_piece:
         game.board[to_pos[0]][to_pos[1]] = promoted_piece(piece.color)

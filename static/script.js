@@ -137,12 +137,21 @@ function showPromotionMenu(result, from, to) {
     // Determinar el color del jugador que está promoviendo
     const promotionColor = result.promotion_piece_color; // Esto debe venir del backend
 
+    // Mapeo de nombres de piezas a sufijos de imágenes
+    const pieceImageMap = {
+        queen: "q",
+        rook: "r",
+        bishop: "b",
+        knight: "n"
+    };
+
     // Actualizar las imágenes de las piezas en el menú de promoción
     const buttons = document.querySelectorAll(".promotion-option");
     buttons.forEach(button => {
-        const pieceType = button.dataset.piece;
+        const pieceType = button.dataset.piece; // Obtener el tipo de pieza (queen, rook, bishop, knight)
         const pieceImg = button.querySelector("img");
-        pieceImg.src = `/static/images/${promotionColor[0]}${pieceType[0]}.png`; // Actualizar la imagen
+        const imageSuffix = pieceImageMap[pieceType]; // Obtener el sufijo correspondiente (q, r, b, n)
+        pieceImg.src = `/static/images/${promotionColor[0]}${imageSuffix}.png`; // Generar la URL de la imagen
         pieceImg.alt = `${promotionColor} ${pieceType}`;
     });
 
