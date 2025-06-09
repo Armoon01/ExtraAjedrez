@@ -27,12 +27,12 @@ Este es un proyecto personal inspirado en Chess.com. El objetivo es replicar sus
 ### ✅ Fase 1: Lógica del Juego
 - [x] Representación del tablero (8x8)
 - [x] Clases para cada pieza y sus movimientos
-- [ ] Validación de movimientos legales
-- [ ] Detección de jaque y jaque mate
+- [x] Validación de movimientos legales
+- [x] Detección de jaque y jaque mate
 
 ### 🔄 Fase 2: Interfaz Web
-- [ ] Renderizar el tablero en navegador
-- [ ] Comunicación frontend-backend para los movimientos
+- [x] Renderizar el tablero en navegador
+- [x] Comunicación frontend-backend para los movimientos
 
 ### 🔐 Fase 3: Sistema de Usuarios
 - [ ] Registro e inicio de sesión
@@ -44,8 +44,8 @@ Este es un proyecto personal inspirado en Chess.com. El objetivo es replicar sus
 - [ ] Comunicación en tiempo real con sockets
 
 ### 🎨 Fase 5: Interfaz estilo Chess.com
-- [ ] Mejoras visuales y de estilo
-- [ ] Añadir temporizador, mensajes, animaciones
+- [x] Mejoras visuales y de estilo
+- [x] Añadir temporizador, mensajes, animaciones
 
 ---
 
