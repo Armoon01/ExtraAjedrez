@@ -266,7 +266,6 @@ async function attemptMove(from, to) {
             showCheckmateAnimation(result.king_position, result.loser_king_position);
         }
         clearInterval(timerInterval);
-        document.getElementById("reset-game").classList.remove("hidden");
         return;
     }
 
@@ -337,7 +336,6 @@ async function iaMove() {
                 showCheckmateAnimation(result.king_position, result.loser_king_position);
             }
             clearInterval(timerInterval);
-            document.getElementById("reset-game").classList.remove("hidden");
         } else {
             // Actualiza turno y timer solo si no terminó
             currentTurn = result.turn;
@@ -558,7 +556,6 @@ document.getElementById("reset-game").addEventListener("click", async () => {
         blackTime = 600;
         clearInterval(timerInterval);
         startTimer();
-        document.getElementById("reset-game").classList.add("hidden");
     }
 });
 

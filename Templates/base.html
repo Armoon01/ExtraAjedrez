@@ -3,11 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=, initial-scale=1.0">
-  <title>Chess App</title>
+  <title>Extra Discretas</title>
   <link rel="stylesheet" href="/static/style.css?v=1.0">
 </head>
 <body>
-  <h1>Chess.com Clone</h1>
+  <h1>Extra Discretas</h1>
+  <h2>Grupo 04-10AM</h2>
+  <h2 id="turn">Turno: white</h2>
+  <button id="reset-game" class="reset-button">Reiniciar Juego</button>
   <div class="main-center">
     <div class="board-bar-wrapper">
       <div id="eval-bar-container">
@@ -85,7 +88,6 @@
       </div>
     </div>
   </div>
-  <h2 id="turn">Turno: white</h2>
   <div id="promotion-menu" class="modal hidden">
     <div class="modal-content">
       <h3>Elige una pieza para la promoción</h3>
@@ -106,7 +108,6 @@
       <button id="close-promotion-menu">Cerrar</button>
     </div>
   </div>
-  <button id="reset-game" class="reset-button">Reiniciar Juego</button>
   <script src="/static/script.js"></script>
 </body>
 </html>

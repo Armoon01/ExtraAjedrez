@@ -337,7 +337,7 @@ body {
 .white-clock, .black-clock { display: inline-block; margin-left: 10px; }
 .white-clock.hidden, .black-clock.hidden { display: none; }
 .reset-button {
-  margin-top: 20px;
+  margin-top: 0px;
   padding: 10px 20px;
   font-size: 16px;
   background-color: #007bff;
