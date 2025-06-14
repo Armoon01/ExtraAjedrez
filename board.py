@@ -13,7 +13,6 @@ class ChessBoard:
         self.winner = None
         self.stalemate = False
 
-
     def create_board(self):
         board = [[None for _ in range(8)] for _ in range(8)]
 
@@ -141,8 +140,9 @@ class ChessBoard:
             "captured_piece": {
                 "type": captured_piece.name.lower(),
                 "color": captured_piece.color
-            } if captured_piece else None  # Incluir información de la pieza capturada
+            } if captured_piece else None
         }
+
     def get_legal_moves(self, pos, board, last_move):
         x, y = pos
         piece = board[x][y]
@@ -154,19 +154,12 @@ class ChessBoard:
 
         # Si la pieza es un rey, verificar el enroque
         if isinstance(piece, King) and not piece.has_moved:
-            print(f"Verificando enroque para el rey en posición {pos}")
             # Enroque corto (hacia la derecha)
             if self.can_castle_kingside(piece.color):
-                print("Enroque corto permitido")
                 possible_moves.append((x, y + 2))
-            else:
-                print("Enroque corto no permitido")
             # Enroque largo (hacia la izquierda)
             if self.can_castle_queenside(piece.color):
-                print("Enroque largo permitido")
                 possible_moves.append((x, y - 2))
-            else:
-                print("Enroque largo no permitido")
 
         legal_moves = []
         for move in possible_moves:
@@ -184,25 +177,21 @@ class ChessBoard:
             board[to_pos[0]][to_pos[1]] = captured_piece
 
         return legal_moves
+
     def can_castle_kingside(self, color):
         row = 7 if color == "white" else 0
         king = self.board[row][4]
         rook = self.board[row][7]
 
         if not isinstance(king, King) or not isinstance(rook, Rook):
-            print("El rey o la torre no están en las posiciones correctas para el enroque corto.")
             return False
         if king.has_moved or rook.has_moved:
-            print("El rey o la torre ya se han movido.")
             return False
         if self.board[row][5] or self.board[row][6]:
-            print("Hay piezas entre el rey y la torre.")
             return False
         if self.is_in_check(color):
-            print("El rey está en jaque.")
             return False
         if self.does_move_cover_check((row, 4), (row, 5)) or self.does_move_cover_check((row, 4), (row, 6)):
-            print("El rey pasa por una casilla atacada.")
             return False
 
         return True
@@ -213,19 +202,14 @@ class ChessBoard:
         rook = self.board[row][0]
 
         if not isinstance(king, King) or not isinstance(rook, Rook):
-            print("El rey o la torre no están en las posiciones correctas para el enroque largo.")
             return False
         if king.has_moved or rook.has_moved:
-            print("El rey o la torre ya se han movido.")
             return False
         if self.board[row][1] or self.board[row][2] or self.board[row][3]:
-            print("Hay piezas entre el rey y la torre.")
             return False
         if self.is_in_check(color):
-            print("El rey está en jaque.")
             return False
         if self.does_move_cover_check((row, 4), (row, 3)) or self.does_move_cover_check((row, 4), (row, 2)):
-            print("El rey pasa por una casilla atacada.")
             return False
 
         return True
@@ -257,12 +241,28 @@ class ChessBoard:
                     if king_pos in piece.get_legal_moves((x, y), self.board, self.last_move):
                         return True
         return False
+
+    def is_checkmate(self):
+        """Devuelve True si el jugador actual está en jaque mate."""
+        if not self.is_in_check(self.current_turn):
+            return False
+        # Si está en jaque y no tiene movimientos legales, es mate
+        for x in range(8):
+            for y in range(8):
+                piece = self.board[x][y]
+                if piece and piece.color == self.current_turn:
+                    moves = self.get_legal_moves((x, y), self.board, self.last_move)
+                    if moves:
+                        return False
+        return True
+
     def get_loser(self):
         if self.winner == "white":
             return "black"
         elif self.winner == "black":
             return "white"
-        return None 
+        return None
+
     def get_king_position(self, color):
         for x in range(8):
             for y in range(8):
@@ -270,20 +270,20 @@ class ChessBoard:
                 if piece and piece.name.lower() == 'k' and piece.color == color:
                     return (x, y)
         return None
+
     def setup_stalemate_board(self):
         """Configura el tablero en una situación de ahogado."""
         self.board = [[None for _ in range(8)] for _ in range(8)]
-        self.board[7][7] = King("black")  # Rey negro en e1
+        self.board[7][7] = King("black")  # Rey negro en h1
         self.board[7][7].has_moved = True
-        self.board[5][6] = Queen("white")  # Reina blanca en a2
-        self.board[5][5] = King("white")  # Rey blanco en a8
+        self.board[5][6] = Queen("white")  # Reina blanca en g3
+        self.board[5][5] = King("white")  # Rey blanco en f3
         self.board[5][5].has_moved = True
         self.current_turn = "black"
         self.winner = None
+
     def is_game_over(self):
         """Verifica si el jugador actual tiene algún movimiento legal."""
-        print(f"Verificando si el juego ha terminado. Turno actual: {self.current_turn}")
-        
         # Verificar si el jugador actual tiene movimientos legales
         for row in range(8):
             for col in range(8):
@@ -291,29 +291,24 @@ class ChessBoard:
                 if piece and piece.color == self.current_turn:
                     moves = self.get_legal_moves((row, col), self.board, self.last_move)
                     if moves:
-                        print(f"La pieza {piece.name} en ({row}, {col}) tiene movimientos legales: {moves}")
-                        return False  # El juego no ha terminado porque hay movimientos legales
+                        return False
 
         # Si no hay movimientos legales, verificar si es jaque mate o ahogado
         if self.is_in_check(self.current_turn):
             self.stalemate = False  # Es jaque mate
             self.winner = "black" if self.current_turn == "white" else "white"
         else:
-           
             self.winner = None  # Empate por ahogado
             self.stalemate = True
         return True
 
     def get_winner(self):
         return self.winner
+
     def does_move_cover_check(self, from_pos, to_pos):
-        """
-        Verifica si un movimiento cubre el jaque o deja al rey en jaque.
-        """
-        # Obtener la pieza que se está moviendo
+        """Verifica si un movimiento cubre el jaque o deja al rey en jaque."""
         moving_piece = self.board[from_pos[0]][from_pos[1]]
         if not moving_piece:
-            print(f"No hay ninguna pieza en la posición {from_pos}.")
             return False
 
         # Simular el movimiento
@@ -328,10 +323,4 @@ class ChessBoard:
         self.board[from_pos[0]][from_pos[1]] = moving_piece
         self.board[to_pos[0]][to_pos[1]] = original_piece
 
-        # Si el rey sigue en jaque, el movimiento no cubre el jaque
-        if in_check:
-            print(f"El movimiento de {from_pos} a {to_pos} no cubre el jaque.")
-        else:
-            print(f"El movimiento de {from_pos} a {to_pos} cubre el jaque.")
-        
         return not in_check

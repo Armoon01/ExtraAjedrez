@@ -6,7 +6,7 @@ from app.pieces.bishop import Bishop
 from app.pieces.rook import Rook
 from app.pieces.queen import Queen
 from app.pieces.king import King
-
+from app.ia import obtener_mejor_movimiento, evaluar_tablero
 app = Flask(__name__, static_url_path="/static", static_folder="static", template_folder="templates")
 
 # Crear el juego
@@ -26,12 +26,15 @@ def get_board():
     if game_over:
         winner = game.get_winner()
 
+    eval_score = evaluar_tablero(game) # <- añade esto
+
     return jsonify({
         "board": game.get_board_state(),
         "turn": game.current_turn,
         "king_in_check": king_in_check,
         "game_over": game_over,
-        "winner": winner  # Ganador del juego si ha terminado
+        "winner": winner,
+        "eval": eval_score 
     })
 
 @app.route("/legal_moves", methods=["POST"])
@@ -134,7 +137,38 @@ def promote():
 @app.route("/api/reset", methods=["POST"])
 def reset_game():
     global game
-    game = ChessBoard()  # Reiniciar el tablero
+    game = ChessBoard()
     return jsonify({"success": True, "board": game.get_board_state(), "turn": game.current_turn})
+
+@app.route('/api/ia_move', methods=['POST'])
+def ia_move():
+    data = request.get_json() or {}
+    color = data.get("color", game.current_turn)
+    profundidad = data.get("profundidad", 2)
+    promotion_choice = data.get("promotion_choice", "queen")
+    move = obtener_mejor_movimiento(game, profundidad, color)
+    if move is None:
+        return jsonify({"success": False, "message": "No hay movimientos posibles"})
+    from_pos, to_pos = move
+    result = game.move_piece(from_pos, to_pos, promotion_choice=promotion_choice)
+    result["from"] = from_pos
+    result["to"] = to_pos
+    result["board"] = game.get_board_state()
+    result["turn"] = game.current_turn
+    result["game_over"] = game.is_game_over()
+    result["winner"] = game.get_winner()
+    result["eval"] = evaluar_tablero(game)
+    result["success"] = True
+
+    if result["game_over"]:
+        result["winner_color"] = game.get_winner()
+        result["loser_king_position"] = game.get_king_position(game.get_loser())
+        result["king_position"] = game.get_king_position(game.get_winner())
+        if game.stalemate:
+            result["stalemate"] = True
+            result["black_king_position"] = game.get_king_position("black")
+            result["white_king_position"] = game.get_king_position("white")
+
+    return jsonify(result)
 if __name__ == "__main__":
     app.run(debug=True)

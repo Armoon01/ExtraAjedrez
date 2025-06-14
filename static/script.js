@@ -1,6 +1,12 @@
 let selected = null;
 let currentTurn = "white";
 let gameOver = false;
+let iaThinking = false; // Bandera para bloquear input mientras piensa la IA
+
+// Espera a que el navegador pinte el DOM antes de animar
+function waitNextFrame() {
+    return new Promise(resolve => requestAnimationFrame(() => resolve()));
+}
 
 async function loadBoard() {
     const res = await fetch('/api/board');
@@ -9,24 +15,40 @@ async function loadBoard() {
     gameOver = data.game_over;
 
     if (gameOver) {
+        updateEvalBar(data.eval);
         return;
     }
 
-    renderBoard(data.board, data.king_in_check);
+    renderBoard(data.board, data.king_in_check, data.last_move);
     document.getElementById("turn").innerText = "Turno: " + currentTurn;
+    updateEvalBar(data.eval); 
 }
 
 function renderBoard(board, kingInCheck = null, last_move) {
     const boardDiv = document.getElementById('board');
-        // Eliminar solo las celdas del tablero, preservando otros elementos
-     // Eliminar solo las celdas del tablero, preservando otros elementos
-     const cells = boardDiv.querySelectorAll('.cell');
-     cells.forEach(cell => cell.remove());
- 
-    
 
+    // --- GUARDAR DIVS DE ANIMACIÓN ---
+    const winnerDiv = document.getElementById("winner");
+    const checkmateDiv = document.getElementById("checkmate");
+    const drawBlackDiv = document.getElementById("draw-black");
+    const drawWhiteDiv = document.getElementById("draw-white");
+
+    const animDivs = [];
+    if (winnerDiv) animDivs.push(winnerDiv);
+    if (checkmateDiv) animDivs.push(checkmateDiv);
+    if (drawBlackDiv) animDivs.push(drawBlackDiv);
+    if (drawWhiteDiv) animDivs.push(drawWhiteDiv);
+
+    // --- LIMPIAR SOLO LAS CELDAS ---
+    Array.from(boardDiv.children).forEach(child => {
+        if (!animDivs.includes(child)) boardDiv.removeChild(child);
+    });
+
+    // --- CREAR CELDAS DEL TABLERO ---
     for (let i = 0; i < 8; i++) {
         for (let j = 0; j < 8; j++) {
+            if (document.querySelector(`.cell[data-pos="${i},${j}"]`)) continue;
+
             const cell = document.createElement('div');
             cell.className = 'cell ' + ((i + j) % 2 === 0 ? 'white' : 'black');
             cell.dataset.pos = `${i},${j}`;
@@ -36,7 +58,7 @@ function renderBoard(board, kingInCheck = null, last_move) {
                 const pieceImg = document.createElement('img');
                 pieceImg.src = `/static/images/${piece.color[0]}${piece.type}.png`;
                 pieceImg.className = 'piece-img';
-                pieceImg.draggable = piece.color === currentTurn;
+                pieceImg.draggable = piece.color === currentTurn && !iaThinking;
 
                 pieceImg.addEventListener('dragstart', (e) => handleDragStart(e, i, j));
                 pieceImg.addEventListener('dragend', handleDragEnd);
@@ -61,55 +83,52 @@ function renderBoard(board, kingInCheck = null, last_move) {
         if (originCell) originCell.classList.add("highlight-origin");
         if (destinationCell) destinationCell.classList.add("highlight-destination");
     }
+
+    // --- RE-INSERTAR LOS DIVS DE ANIMACIÓN (si no están ya) ---
+    animDivs.forEach(div => {
+        if (!boardDiv.contains(div)) boardDiv.appendChild(div);
+    });
 }
 
 function handleDragStart(e, x, y) {
-    if (gameOver) return;
-
+    if (gameOver || iaThinking) return;
     e.dataTransfer.setData('text/plain', JSON.stringify({ from: [x, y] }));
-    e.dataTransfer.effectAllowed = "move"; // Permitir solo mover, no copiar
+    e.dataTransfer.effectAllowed = "move";
     selected = [x, y];
-    clearHighlights(true); // Limpiar resaltados excepto el último movimiento
+    clearHighlights(true);
     showLegalMoves(x, y);
 
-    // Configurar una imagen fantasma transparente
     const img = new Image();
-    img.src = ''; // Imagen vacía para que no se muestre nada
+    img.src = '';
     e.dataTransfer.setDragImage(img, 0, 0);
 
-    // Agregar la clase "dragging" a la pieza
     e.target.classList.add("dragging");
 }
 
 function handleDragEnd(e) {
-    // Eliminar la clase "dragging" de la pieza
     e.target.classList.remove("dragging");
 }
 
 function handleDragOver(e) {
-
-    e.preventDefault(); // Necesario para permitir el drop
-    e.stopPropagation()
-    e.dataTransfer.dropEffect = "move"; // Mostrar que el elemento se moverá
+    e.preventDefault();
+    e.stopPropagation();
+    e.dataTransfer.dropEffect = "move";
 }
 
 async function handleDrop(e, x, y) {
     e.preventDefault();
+    if (iaThinking) return;
     const data = e.dataTransfer.getData('text/plain');
     if (!data) return;
-
     const from = JSON.parse(data).from;
     const to = [x, y];
-
     await attemptMove(from, to);
 }
 
 async function handleClick(x, y) {
-    if (gameOver) return;
-
+    if (gameOver || iaThinking) return;
     const cell = document.querySelector(`.cell[data-pos="${x},${y}"]`);
     const pieceImg = cell.querySelector("img");
-
     const res = await fetch('/api/board');
     const data = await res.json();
     const piece = data.board[x][y];
@@ -117,25 +136,22 @@ async function handleClick(x, y) {
     if (!selected) {
         if (!pieceImg || !piece || piece.color !== currentTurn) return;
         selected = [x, y];
-        clearHighlights(true); // Limpiar resaltados excepto el último movimiento
+        clearHighlights(true);
         await showLegalMoves(x, y);
     } else {
         if (piece && piece.color === currentTurn) {
             selected = [x, y];
-            clearHighlights(true); // Limpiar resaltados excepto el último movimiento
+            clearHighlights(true);
             await showLegalMoves(x, y);
             return;
         }
-
         await attemptMove(selected, [x, y]);
     }
 }
+
 function showPromotionMenu(result, from, to) {
     const modal = document.getElementById("promotion-menu");
-    modal.classList.remove("hidden");
-
-    // Determinar el color del jugador que está promoviendo
-    const promotionColor = result.promotion_piece_color; // Esto debe venir del backend
+    const promotionColor = result.promotion_piece_color; // Asegúrate de que tu backend envía esto
 
     // Mapeo de nombres de piezas a sufijos de imágenes
     const pieceImageMap = {
@@ -145,47 +161,60 @@ function showPromotionMenu(result, from, to) {
         knight: "n"
     };
 
-    // Actualizar las imágenes de las piezas en el menú de promoción
+    // Actualizar imágenes en el menú
     const buttons = document.querySelectorAll(".promotion-option");
     buttons.forEach(button => {
-        const pieceType = button.dataset.piece; // Obtener el tipo de pieza (queen, rook, bishop, knight)
+        const pieceType = button.dataset.piece;
         const pieceImg = button.querySelector("img");
-        const imageSuffix = pieceImageMap[pieceType]; // Obtener el sufijo correspondiente (q, r, b, n)
-        pieceImg.src = `/static/images/${promotionColor[0]}${imageSuffix}.png`; // Generar la URL de la imagen
+        const imageSuffix = pieceImageMap[pieceType];
+        pieceImg.src = `/static/images/${promotionColor[0]}${imageSuffix}.png`;
         pieceImg.alt = `${promotionColor} ${pieceType}`;
     });
 
-    // Configurar los eventos de clic para las opciones de promoción
+    // --- Adaptación para IA ---
+    if (promotionColor === "black") { // Cambia a "white" si tu IA es blanca
+        // La IA siempre elige dama automáticamente (puedes cambiar "queen" por otra)
+        const promotionChoice = "queen";
+        modal.classList.add("hidden"); // No mostrar el modal para la IA
+        promoteAutomatically(from, to, promotionChoice);
+        return;
+    }
+
+    // --- Para el jugador humano ---
+    modal.classList.remove("hidden");
     buttons.forEach(button => {
         button.onclick = async () => {
             const promotionChoice = button.dataset.piece;
-
-            // Enviar la promoción al backend
-            const promotionRes = await fetch('/promote', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ from, to, piece_type: promotionChoice })
-            });
-
-            const promotionResult = await promotionRes.json();
-
-            if (!promotionResult.success) {
-                alert(promotionResult.error || "Error al promover la pieza.");
-            } else {
-                currentTurn = promotionResult.turn;
-                await loadBoard(); // Recargar el tablero después de la promoción
-            }
-
+            await promoteAutomatically(from, to, promotionChoice);
             modal.classList.add("hidden");
         };
     });
 
-    // Configurar el botón de cerrar el menú
     document.getElementById("close-promotion-menu").onclick = () => {
         modal.classList.add("hidden");
     };
 }
+
+// Función auxiliar para enviar la promoción
+async function promoteAutomatically(from, to, promotionChoice) {
+    const promotionRes = await fetch('/promote', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ from, to, piece_type: promotionChoice })
+    });
+
+    const promotionResult = await promotionRes.json();
+
+    if (!promotionResult.success) {
+        alert(promotionResult.error || "Error al promover la pieza.");
+    } else {
+        currentTurn = promotionResult.turn;
+        await loadBoard();
+    }
+}
+
 async function attemptMove(from, to) {
+    if (iaThinking) return;
     const moveRes = await fetch('/api/move', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -199,7 +228,6 @@ async function attemptMove(from, to) {
         return;
     }
 
-    // Reproducir sonido según el tipo de movimiento
     if (result.castle) {
         playSound('castle.mp3');
     } else if (result.captured_piece) {
@@ -212,10 +240,8 @@ async function attemptMove(from, to) {
         playSound('move-self.mp3');
     }
 
-    // Limpiar los resaltados anteriores
     clearHighlights();
 
-    // Resaltar las casillas del movimiento actual
     const originCell = document.querySelector(`.cell[data-pos="${from[0]},${from[1]}"]`);
     const destinationCell = document.querySelector(`.cell[data-pos="${to[0]},${to[1]}"]`);
     if (originCell) originCell.classList.add("highlight-origin");
@@ -228,27 +254,18 @@ async function attemptMove(from, to) {
         return;
     }
 
-    // Mostrar animación de jaque mate si el juego ha terminado
     if (result.game_over) {
-        console.log("Juego terminado:", result.winner);
-        console.log(result);
+        renderBoard(result.board, null, result.last_move);
+        await waitNextFrame(); // Espera a que el DOM pinte el movimiento ganador
         if(result.stalemate) {
-            console.log("Juego terminado por ahogado");
             const blackKingPosition = result.black_king_position;
             const whiteKingPosition = result.white_king_position;
-            renderBoard(result.board, null, result.last_move);
             showStalemateAnimation(blackKingPosition, whiteKingPosition);
         }
         else if (result.king_position && result.loser_king_position) {
-            renderBoard(result.board, null, result.last_move);
             showCheckmateAnimation(result.king_position, result.loser_king_position);
-        } else {
-            console.error("Faltan posiciones del rey en la respuesta del backend.");
         }
-
-        // Detener el temporizador
         clearInterval(timerInterval);
-
         document.getElementById("reset-game").classList.remove("hidden");
         return;
     }
@@ -256,113 +273,147 @@ async function attemptMove(from, to) {
     currentTurn = result.turn;
     switchTimer();
 
-    // Resaltar el último movimiento del oponente
     if (result.last_move) {
         const lastOrigin = document.querySelector(`.cell[data-pos="${result.last_move.from[0]},${result.last_move.from[1]}"]`);
         const lastDestination = document.querySelector(`.cell[data-pos="${result.last_move.to[0]},${result.last_move.to[1]}"]`);
         if (lastOrigin) lastOrigin.classList.add("highlight-origin");
         if (lastDestination) lastDestination.classList.add("highlight-destination");
     }
-}
-function showStalemateAnimation(blackKingPosition, whiteKingPosition) {
-    console.log("Mostrar animación de empate por ahogado");
 
+    // Si es el turno de la IA (por ejemplo, negras), llama a iaMove
+    if (!result.game_over && currentTurn === "black") { // Cambia "black" por "white" si la IA juega con blancas
+        await iaMove();
+    }
+}
+
+async function iaMove() {
+    iaThinking = true;
+    try {
+        const res = await fetch('/api/ia_move', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ color: currentTurn, profundidad: 2 }) // Ajusta profundidad si quieres
+        });
+        const result = await res.json();
+
+        // Si la IA no puede mover o hay error
+        if (!result.success) {
+            iaThinking = false;
+            alert(result.message || "La IA no puede mover.");
+            return;
+        }
+
+        // Sonido según el tipo de jugada
+        if (result.castle) {
+            playSound('castle.mp3');
+        } else if (result.captured_piece) {
+            playSound('capture.mp3');
+        } else if (result.in_check) {
+            playSound('capture.mp3');
+        } else if (result.promotion_required) {
+            playSound('promote.mp3');
+        } else {
+            playSound('move-self.mp3');
+        }
+
+        // Resalta movimiento realizado
+        if (result.from && result.to) {
+            clearHighlights();
+            const originCell = document.querySelector(`.cell[data-pos="${result.from[0]},${result.from[1]}"]`);
+            const destinationCell = document.querySelector(`.cell[data-pos="${result.to[0]},${result.to[1]}"]`);
+            if (originCell) originCell.classList.add("highlight-origin");
+            if (destinationCell) destinationCell.classList.add("highlight-destination");
+        }
+
+        // Actualiza tablero y eval bar
+        await loadBoard();
+
+        if (result.game_over) {
+            renderBoard(result.board, null, result.last_move);
+            await waitNextFrame(); // Espera a que el DOM pinte el movimiento ganador
+            if (result.stalemate) {
+                showStalemateAnimation(result.black_king_position, result.white_king_position);
+            } else if (result.king_position && result.loser_king_position) {
+                showCheckmateAnimation(result.king_position, result.loser_king_position);
+            }
+            clearInterval(timerInterval);
+            document.getElementById("reset-game").classList.remove("hidden");
+        } else {
+            // Actualiza turno y timer solo si no terminó
+            currentTurn = result.turn;
+            switchTimer();
+        }
+    } catch (error) {
+        alert("Error en el movimiento de la IA.");
+        console.error(error);
+    }
+    iaThinking = false;
+}
+
+function showStalemateAnimation(blackKingPosition, whiteKingPosition) {
     const board = document.getElementById('board');
     const boardRect = board.getBoundingClientRect();
-    const cellSize = boardRect.width / 8; // Tamaño de una celda (asumiendo un tablero de 8x8)
+    const cellSize = boardRect.width / 8;
 
     const drawBlack = document.getElementById("draw-black");
     const drawWhite = document.getElementById("draw-white");
 
-    // Calcular las posiciones del rey negro (relativas al tablero)
-    const blackLeft = blackKingPosition[1] * cellSize;
-    const blackTop = blackKingPosition[0] * cellSize;
-
-    // Calcular las posiciones del rey blanco (relativas al tablero)
-    const whiteLeft = whiteKingPosition[1] * cellSize;
-    const whiteTop = whiteKingPosition[0] * cellSize;
-
-    console.log("Coordenadas del rey negro:", blackLeft, blackTop);
-    console.log("Coordenadas del rey blanco:", whiteLeft, whiteTop);
-
-    // Posicionar la animación de empate para el rey negro
+    // Ubica los overlays exactamente sobre la casilla del rey (tamaño igual a la casilla)
     drawBlack.style.position = "absolute";
-    drawBlack.style.left = `${blackLeft}px`;
-    drawBlack.style.top = `${blackTop}px`;
+    drawBlack.style.left = `${blackKingPosition[1] * cellSize}px`;
+    drawBlack.style.top = `${blackKingPosition[0] * cellSize}px`;
     drawBlack.style.width = `${cellSize}px`;
     drawBlack.style.height = `${cellSize}px`;
-    drawBlack.classList.remove("hidden");
+    drawBlack.classList.remove("hidden", "shrink", "draw-final");
 
-    // Posicionar la animación de empate para el rey blanco
     drawWhite.style.position = "absolute";
-    drawWhite.style.left = `${whiteLeft}px`;
-    drawWhite.style.top = `${whiteTop}px`;
+    drawWhite.style.left = `${whiteKingPosition[1] * cellSize}px`;
+    drawWhite.style.top = `${whiteKingPosition[0] * cellSize}px`;
     drawWhite.style.width = `${cellSize}px`;
     drawWhite.style.height = `${cellSize}px`;
-    drawWhite.classList.remove("hidden");
+    drawWhite.classList.remove("hidden", "shrink", "draw-final");
 
-    // Activar la animación de reducción y movimiento a la esquina superior derecha
+    // Espera y luego sólo cambia a bola (NO cambies tamaño ni posición)
     setTimeout(() => {
         drawBlack.classList.add("shrink", "draw-final");
         drawWhite.classList.add("shrink", "draw-final");
-
-        // Desvanecer el texto durante la animación
         drawBlack.querySelector("span").style.opacity = "0";
         drawWhite.querySelector("span").style.opacity = "0";
     }, 3000);
 }
-function showCheckmateAnimation(winnerKingPosition, loserKingPosition) {
-    console.log("Mostrar animación de jaque mate");
 
+function showCheckmateAnimation(winnerKingPosition, loserKingPosition) {
     const board = document.getElementById('board');
     const boardRect = board.getBoundingClientRect();
-    const cellSize = boardRect.width / 8; // Tamaño de una celda (asumiendo un tablero de 8x8)
+    const cellSize = boardRect.width / 8;
 
     const winner = document.getElementById("winner");
     const checkmate = document.getElementById("checkmate");
 
-    // Calcular las posiciones del rey ganador (relativas al tablero)
-    const winnerLeft = winnerKingPosition[1] * cellSize;
-    const winnerTop = winnerKingPosition[0] * cellSize;
-
-    // Calcular las posiciones del rey perdedor (relativas al tablero)
-    const loserLeft = loserKingPosition[1] * cellSize;
-    const loserTop = loserKingPosition[0] * cellSize;
-
-    console.log("Coordenadas del rey ganador:", winnerLeft, winnerTop);
-    console.log("Coordenadas del rey perdedor:", loserLeft, loserTop);
-
-    // Posicionar la animación de Winner sobre la casilla del rey ganador
+    // Ubica los overlays exactamente sobre la casilla del rey (tamaño igual a la casilla)
     winner.style.position = "absolute";
-    winner.style.left = `${winnerLeft}px`;
-    winner.style.top = `${winnerTop}px`;
+    winner.style.left = `${winnerKingPosition[1] * cellSize}px`;
+    winner.style.top = `${winnerKingPosition[0] * cellSize}px`;
     winner.style.width = `${cellSize}px`;
     winner.style.height = `${cellSize}px`;
-    winner.classList.remove("hidden");
+    winner.classList.remove("hidden", "shrink", "winner-final");
 
-    // Posicionar la animación de Checkmate sobre la casilla del rey perdedor
     checkmate.style.position = "absolute";
-    checkmate.style.left = `${loserLeft}px`;
-    checkmate.style.top = `${loserTop}px`;
+    checkmate.style.left = `${loserKingPosition[1] * cellSize}px`;
+    checkmate.style.top = `${loserKingPosition[0] * cellSize}px`;
     checkmate.style.width = `${cellSize}px`;
     checkmate.style.height = `${cellSize}px`;
-    checkmate.classList.remove("hidden");
+    checkmate.classList.remove("hidden", "shrink", "checkmate-final");
 
-    console.log("Posición del rey ganador:", winnerKingPosition);
-    console.log("Posición del rey perdedor:", loserKingPosition);
-    console.log("Coordenadas calculadas para el ganador:", winnerLeft, winnerTop);
-    console.log("Coordenadas calculadas para el perdedor:", loserLeft, loserTop);
-
-    // Activar la animación de reducción y movimiento a la esquina superior derecha
+    // Espera y luego sólo cambia a bola (NO cambies tamaño ni posición)
     setTimeout(() => {
         winner.classList.add("shrink", "winner-final");
         checkmate.classList.add("shrink", "checkmate-final");
-
-        // Desvanecer el texto durante la animación
         winner.querySelector("span").style.opacity = "0";
         checkmate.querySelector("span").style.opacity = "0";
     }, 3000);
 }
+
 async function showLegalMoves(row, col) {
     const response = await fetch("/legal_moves", {
         method: "POST",
@@ -371,7 +422,6 @@ async function showLegalMoves(row, col) {
     });
 
     const result = await response.json();
-    console.log("Movimientos legales:", result.moves);
 
     if (result.moves.length > 0) {
         const cell = document.querySelector(`.cell[data-pos="${row},${col}"]`);
@@ -383,16 +433,14 @@ async function showLegalMoves(row, col) {
         });
     }
 }
+
 function clearHighlights(excludeLastMove = false) {
     document.querySelectorAll(".cell").forEach(cell => {
         if (excludeLastMove) {
-            console.log("Excluyendo resaltados del último movimiento");
-            // No eliminar los resaltados del último movimiento
             if (cell.classList.contains("highlight-origin") || cell.classList.contains("highlight-destination")) {
                 return;
             }
         }
-        console.log("Limpiando resaltados de la celda:", cell.dataset.pos);
         cell.classList.remove("selected-cell", "legal-move", "highlight-origin", "highlight-destination");
     });
 }
@@ -439,6 +487,7 @@ function rotateClock(player) {
         clockHand.setAttribute("transform", `rotate(${blackClockAngle} 50 50)`);
     }
 }
+
 function updateTimerDisplay(player, time) {
     const minutes = Math.floor(time / 60);
     const seconds = time % 60;
@@ -451,25 +500,22 @@ function switchTimer() {
     document.querySelector(".white-clock").classList.toggle("hidden", currentTimer !== "white");
     document.querySelector(".black-clock").classList.toggle("hidden", currentTimer !== "black");
 }
+
 function playSound(sound) {
     const audio = new Audio(`/static/sounds/${sound}`);
     audio.play();
 }
+
 document.getElementById("reset-game").addEventListener("click", async () => {
     const res = await fetch('/api/reset', { method: 'POST' });
     const data = await res.json();
 
     if (data.success) {
-        console.log("Juego reiniciado");
-
-        // Reiniciar el tablero
         renderBoard(data.board);
         document.getElementById("turn").innerText = "Turno: " + data.turn;
+        currentTurn = data.turn;
+        gameOver = false;
 
-        // Restablecer el estado del juego
-        currentTurn = data.turn; // Reiniciar el turno actual
-        gameOver = false; // Asegurarse de que el juego no esté marcado como terminado
-        // Ocultar las animaciones y restablecer sus propiedades
         const winner = document.getElementById("winner");
         const checkmate = document.getElementById("checkmate");
 
@@ -489,7 +535,6 @@ document.getElementById("reset-game").addEventListener("click", async () => {
         checkmate.classList.add("hidden");
         checkmate.querySelector("span").style.opacity = "1";
 
-        // Ocultar las animaciones de empate y restablecer sus propiedades
         const drawBlack = document.getElementById("draw-black");
         const drawWhite = document.getElementById("draw-white");
 
@@ -508,33 +553,43 @@ document.getElementById("reset-game").addEventListener("click", async () => {
         drawWhite.style.width = "";
         drawWhite.style.height = "";
         drawWhite.querySelector("span").style.opacity = "1";
-        // Reiniciar los temporizadores
-        whiteTime = 600; // 10 minutos en segundos
+
+        whiteTime = 600;
         blackTime = 600;
-        clearInterval(timerInterval); // Detener cualquier temporizador activo
-        startTimer(); // Reiniciar el temporizador
-        //esconder el boton de reiniciar partida
+        clearInterval(timerInterval);
+        startTimer();
         document.getElementById("reset-game").classList.add("hidden");
-        console.log("Animaciones revertidas.");
     }
 });
-function updateTimerDisplay(player, time) {
-    const minutes = Math.floor(time / 60);
-    const seconds = time % 60;
-    const timerElement = document.querySelector(`.${player}-timer`);
-    timerElement.textContent = `${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
-}
+
 window.onload = () => {
     loadBoard();
     startTimer();
     document.querySelector(".white-clock").classList.remove("hidden");
     document.querySelector(".black-clock").classList.add("hidden"); 
 };
+
 document.addEventListener("dragover", (e) => {
     e.preventDefault();
     e.dataTransfer.dropEffect = "none";
 });
-
 document.addEventListener("drop", (e) => {
     e.preventDefault();
 });
+
+function updateEvalBar(score) {
+    // Limita el score entre -10 y +10
+    const capped = Math.max(-10, Math.min(10, score));
+    const percent = ((capped + 10) / 20) * 100;
+    const bar = document.getElementById('eval-bar-score');
+    bar.style.height = percent + "%";
+
+    // Score flotante
+    const floatScore = document.getElementById('eval-score-float');
+    let display;
+    if (score > 9.5) display = "M";
+    else if (score < -9.5) display = "-M";
+    else display = (score > 0 ? "+" : "") + score.toFixed(1);
+
+    floatScore.textContent = display;
+}
