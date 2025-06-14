@@ -1,6 +1,6 @@
-# ♟️ ExtreAjedrez - Chess.com Clone
+# ♟️ ExtraAjedrez
 
-Proyecto personal inspirado en Chess.com. El objetivo es replicar funcionalidades principales de la plataforma creando una **aplicación web interactiva** con **Python** y tecnologías web modernas.
+Proyecto grupal inspirado en Chess.com. El objetivo es replicar funcionalidades principales de la plataforma creando una **aplicación web interactiva** con **Python** y tecnologías web modernas.
 
 ---
 
@@ -18,8 +18,6 @@ Proyecto personal inspirado en Chess.com. El objetivo es replicar funcionalidade
 
 - **Backend:** Python, Flask
 - **Frontend:** HTML, CSS, JavaScript
-- **Base de Datos:** SQLite (futuro)
-- **Comunicación en tiempo real:** WebSockets (futuro)
 
 ---
 
@@ -41,17 +39,29 @@ Proyecto personal inspirado en Chess.com. El objetivo es replicar funcionalidade
 - [x] Estilo visual tipo Chess.com
 - [x] Temporizador, mensajes y animaciones
 
-### 🚧 Próximos pasos
-- [ ] Comparar visualmente evaluación de IA propia vs Stockfish
-- [ ] Registro e inicio de sesión de usuarios
-- [ ] Guardado y visualización de partidas en base de datos
-- [ ] Partidas en línea y comunicación en tiempo real
+---
+
+## 🤖 Desarrollo de la IA Propia en ExtraAjedrez
+
+La inteligencia artificial propia de ExtraAjedrez se basa en algoritmos clásicos de ajedrez y conceptos fundamentales de grafos y árboles:
+
+- **El ajedrez como grafo:** Cada estado del tablero es un nodo y cada movimiento legal es una arista, generando un árbol de posibilidades (árbol de jugadas).
+- **Búsqueda en profundidad (DFS) y Minimax con poda alpha-beta:** La IA explora secuencias de movimientos mediante DFS recursivo y selecciona la mejor jugada usando Minimax, optimizando con poda alpha-beta para mayor eficiencia.
+- **Función de evaluación heurística:** Cada posición es evaluada considerando factores como material, desarrollo, control del centro, estructura y avance de peones, movilidad, seguridad del rey, amenazas, promociones y pareja de alfiles.
+- **Priorización de movimientos:** Los movimientos de captura se exploran primero, mejorando la eficacia de la poda alpha-beta.
+
+**¿Qué logra la IA propia?**
+
+- Evalúa posiciones del tablero de forma integral usando heurísticas clásicas.
+- Explora varias jugadas a futuro, simulando el razonamiento de un jugador humano.
+- Selecciona la jugada óptima según el análisis del árbol de movimientos.
+- Su lógica es extensible y sirve como base para futuros desarrollos de IA en ajedrez.
 
 ---
 
 ## 📸 Vista Previa
 
-![Vista previa de ExtreAjedrez](image.png)
+![Vista previa de ExtraAjedrez](image.png)
 
 ---
 
