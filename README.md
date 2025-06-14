@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # ♟️ Chess.com Clone - Proyecto Web de Ajedrez
 
 Este es un proyecto personal inspirado en Chess.com. El objetivo es replicar sus funcionalidades principales utilizando **Python** como lenguaje principal, enfocándome en la creación de una **aplicación web interactiva**.
@@ -61,3 +62,6 @@ Desarrollado por Armoon01 (https://github.com/Armoon01)
 Proyecto con fines educativos y de práctica.
 
 
+=======
+# ExtreAjedrez
+>>>>>>> a0b62cb97b971bb2a4c49b8d2c251e6216227ba3
