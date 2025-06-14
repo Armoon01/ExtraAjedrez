@@ -71,7 +71,7 @@ Antes de ejecutar la aplicación, instala las dependencias necesarias ejecutando
 ```sh
 pip install -r requirements.txt
 ```
-
+---
 Esto instalará automáticamente todas las librerías necesarias para que el proyecto funcione correctamente.
 ## ✨ Desarrollado por
 
