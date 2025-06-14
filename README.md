@@ -67,5 +67,5 @@ La inteligencia artificial propia de ExtraAjedrez se basa en algoritmos clásico
 
 ## ✨ Autor
 
-Desarrollado por [Armoon01](https://github.com/Armoon01)  
+Desarrollado por [Armoon01](https://github.com/Armoon01) [NoSoyAng3l](https://github.com/NoSoyAng3l]
 Proyecto educativo y de práctica.
