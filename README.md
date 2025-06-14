@@ -64,7 +64,15 @@ La inteligencia artificial propia de ExtraAjedrez se basa en algoritmos clásico
 ![Vista previa de ExtraAjedrez](image.png)
 
 ---
+## ⚡ Instalación de dependencias
 
+Antes de ejecutar la aplicación, instala las dependencias necesarias ejecutando en la terminal:
+
+```sh
+pip install -r requirements.txt
+```
+
+Esto instalará automáticamente todas las librerías necesarias para que el proyecto funcione correctamente.
 ## ✨ Desarrollado por
 
 - **Andy José Luna Izaguirre**
