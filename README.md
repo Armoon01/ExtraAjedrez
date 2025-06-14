@@ -1,67 +1,61 @@
-<<<<<<< HEAD
-# ♟️ Chess.com Clone - Proyecto Web de Ajedrez
+# ♟️ ExtreAjedrez - Chess.com Clone
 
-Este es un proyecto personal inspirado en Chess.com. El objetivo es replicar sus funcionalidades principales utilizando **Python** como lenguaje principal, enfocándome en la creación de una **aplicación web interactiva**.
+Proyecto personal inspirado en Chess.com. El objetivo es replicar funcionalidades principales de la plataforma creando una **aplicación web interactiva** con **Python** y tecnologías web modernas.
 
 ---
 
 ## 🚀 Objetivos del Proyecto
 
-- Crear un tablero funcional con lógica completa de ajedrez.
-- Permitir partidas entre dos jugadores en una misma sesión.
-- Construir una interfaz web amigable y visualmente parecida a Chess.com.
-- Implementar cuentas de usuario, historial de partidas y partidas en línea.
+- Tablero funcional con lógica completa de ajedrez.
+- Partidas entre dos jugadores en una misma sesión.
+- Interfaz web amigable y visualmente parecida a Chess.com.
+- Temporizador, mensajes y animaciones.
+- **Comparador de evaluaciones:** Visualización de barra de evaluación de IA propia y Stockfish (en progreso).
 
 ---
 
-## 🛠️ Tecnologías
+## 🛠️ Tecnologías Utilizadas
 
-- **Backend:** Python, Flask (o Django)
-- **Frontend:** HTML, CSS, JavaScript (posiblemente React)
-- **Base de Datos:** SQLite / PostgreSQL
-- **Comunicación en tiempo real:** WebSockets
+- **Backend:** Python, Flask
+- **Frontend:** HTML, CSS, JavaScript
+- **Base de Datos:** SQLite (futuro)
+- **Comunicación en tiempo real:** WebSockets (futuro)
 
 ---
 
-## 📅 Roadmap del Proyecto
+## 📅 Roadmap Actual
 
 ### ✅ Fase 1: Lógica del Juego
 - [x] Representación del tablero (8x8)
-- [x] Clases para cada pieza y sus movimientos
+- [x] Clases para cada pieza y movimientos
 - [x] Validación de movimientos legales
 - [x] Detección de jaque y jaque mate
+- [x] Detección de tablas (ahogado)
 
-### 🔄 Fase 2: Interfaz Web
+### ✅ Fase 2: Interfaz Web
 - [x] Renderizar el tablero en navegador
 - [x] Comunicación frontend-backend para los movimientos
+- [x] Barra de evaluación de IA propia
 
-### 🔐 Fase 3: Sistema de Usuarios
-- [ ] Registro e inicio de sesión
-- [ ] Guardado de partidas en base de datos
-- [ ] Visualización de historial
+### ✅ Fase 3: Mejoras Visuales
+- [x] Estilo visual tipo Chess.com
+- [x] Temporizador, mensajes y animaciones
 
-### 🌐 Fase 4: Partidas Online
-- [ ] Crear/Unirse a partidas en línea
-- [ ] Comunicación en tiempo real con sockets
-
-### 🎨 Fase 5: Interfaz estilo Chess.com
-- [x] Mejoras visuales y de estilo
-- [x] Añadir temporizador, mensajes, animaciones
+### 🚧 Próximos pasos
+- [ ] Comparar visualmente evaluación de IA propia vs Stockfish
+- [ ] Registro e inicio de sesión de usuarios
+- [ ] Guardado y visualización de partidas en base de datos
+- [ ] Partidas en línea y comunicación en tiempo real
 
 ---
 
 ## 📸 Vista Previa
 
-_(Próximamente screenshots de avance)_
+![Vista previa de ExtreAjedrez](image.png)
 
 ---
 
 ## ✨ Autor
 
-Desarrollado por Armoon01 (https://github.com/Armoon01)  
-Proyecto con fines educativos y de práctica.
-
-
-=======
-# ExtreAjedrez
->>>>>>> a0b62cb97b971bb2a4c49b8d2c251e6216227ba3
+Desarrollado por [Armoon01](https://github.com/Armoon01)  
+Proyecto educativo y de práctica.
